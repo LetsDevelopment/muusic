@@ -41,7 +41,13 @@ if ! install_deps; then
 fi
 
 npm run prisma:generate
-if ! npm run db:migrate; then
+
+set +e
+npm run db:migrate
+MIGRATE_STATUS=$?
+set -e
+
+if [[ "${MIGRATE_STATUS}" -ne 0 ]]; then
   echo "db:migrate falhou. Aplicando fallback com prisma db push para este ambiente..."
   npm run db:push
 fi
