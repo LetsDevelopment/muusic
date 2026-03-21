@@ -48,7 +48,7 @@ MIGRATE_STATUS=$?
 set -e
 
 if [[ "${MIGRATE_STATUS}" -ne 0 ]]; then
-  echo "db:migrate falhou. Aplicando fallback com prisma db push para este ambiente..."
+  echo "db:migrate falhou. Aplicando fallback com prisma db push para este ambiente legado..."
   npm run db:push
 fi
 npm run build

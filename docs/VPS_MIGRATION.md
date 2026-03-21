@@ -362,3 +362,8 @@ Checks recomendados apos o workflow:
 - `curl -I http://127.0.0.1:3001/health`
 - `curl -I https://muusic.live`
 - `curl -I https://muusic.live/health`
+
+Observacao:
+- O repositorio agora tem uma migration inicial para bootstrap de banco vazio.
+- O fallback para `prisma db push` em `scripts/deploy_vps.sh` existe apenas para ambientes legados que ficaram com historico inconsistente de migrations.
+- O smoke test detecta `painel.muusic.live` automaticamente quando esse host estiver presente em `FRONTEND_URLS` do `.env`.

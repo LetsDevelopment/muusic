@@ -1,6 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Instagram } from 'lucide-react';
 import muusicLogo from '../assets/logo-muusic.png';
+
+const LANDING_TYPED_PHRASES = [
+  ['A mesma musica.', 'O mesmo sentimento.', 'Em tempo real.'],
+  ['A musica.', 'O Mundo.', 'Em tempo real.']
+];
 
 export default function AuthPage({
   simpleAccess,
@@ -21,6 +26,10 @@ export default function AuthPage({
 }) {
   const [waitlistEmail, setWaitlistEmail] = useState('');
   const [waitlistMessage, setWaitlistMessage] = useState('');
+  const [typedPhraseIndex, setTypedPhraseIndex] = useState(0);
+  const [typedLineIndex, setTypedLineIndex] = useState(0);
+  const [typedCharCount, setTypedCharCount] = useState(0);
+  const [isDeletingTitle, setIsDeletingTitle] = useState(false);
   const landingDots = useMemo(
     () =>
       Array.from({ length: 160 }, (_, index) => ({
@@ -33,6 +42,62 @@ export default function AuthPage({
       })),
     []
   );
+  const activeTypedPhrase = LANDING_TYPED_PHRASES[typedPhraseIndex];
+  const activeTypedLine = activeTypedPhrase[typedLineIndex] || '';
+  const typedTitleLines = activeTypedPhrase.map((line, index) => {
+    if (index < typedLineIndex) return line;
+    if (index > typedLineIndex) return '';
+    return line.slice(0, typedCharCount);
+  });
+
+  useEffect(() => {
+    const typingDelay = isDeletingTitle ? 28 : 52;
+    const pauseBeforeNextLineMs = 220;
+    const pauseBeforeDeleteMs = 1700;
+    const pauseBeforeNextPhraseMs = 320;
+
+    const timerId = window.setTimeout(() => {
+      if (!isDeletingTitle) {
+        if (typedCharCount < activeTypedLine.length) {
+          setTypedCharCount((prev) => prev + 1);
+          return;
+        }
+
+        if (typedLineIndex < activeTypedPhrase.length - 1) {
+          setTypedLineIndex((prev) => prev + 1);
+          setTypedCharCount(0);
+          return;
+        }
+
+        setIsDeletingTitle(true);
+        return;
+      }
+
+      if (typedCharCount > 0) {
+        setTypedCharCount((prev) => prev - 1);
+        return;
+      }
+
+      if (typedLineIndex > 0) {
+        const nextLineIndex = typedLineIndex - 1;
+        setTypedLineIndex(nextLineIndex);
+        setTypedCharCount(activeTypedPhrase[nextLineIndex]?.length || 0);
+        return;
+      }
+
+      setIsDeletingTitle(false);
+      setTypedPhraseIndex((prev) => (prev + 1) % LANDING_TYPED_PHRASES.length);
+      setTypedCharCount(0);
+    }, !isDeletingTitle && typedCharCount === activeTypedLine.length
+      ? typedLineIndex === activeTypedPhrase.length - 1
+        ? pauseBeforeDeleteMs
+        : pauseBeforeNextLineMs
+      : isDeletingTitle && typedCharCount === 0 && typedLineIndex === 0
+        ? pauseBeforeNextPhraseMs
+        : typingDelay);
+
+    return () => window.clearTimeout(timerId);
+  }, [activeTypedLine, activeTypedPhrase, isDeletingTitle, typedCharCount, typedLineIndex]);
 
   const submitWaitlist = (event) => {
     event.preventDefault();
@@ -193,9 +258,18 @@ export default function AuthPage({
         <main className="landing-main">
           <div className="landing-shell landing-main-inner">
             <h1 className="landing-title">
-              <span>Voce nunca</span>
-              <span>ouviu musica</span>
-              <span className="landing-title-cursor">sozinho.</span>
+              {typedTitleLines.map((line, index) => {
+                const isActiveLine = typedLineIndex === index;
+                const isMutedLine = index === 2;
+                return (
+                  <span
+                    key={`${typedPhraseIndex}-${index}`}
+                    className={`landing-title-line${isMutedLine ? ' is-muted' : ''}${isActiveLine ? ' has-caret' : ''}`}
+                  >
+                    {line || '\u00A0'}
+                  </span>
+                );
+              })}
             </h1>
 
             <p className="landing-subtitle">Descubra o que o mundo esta ouvindo, em tempo real.</p>

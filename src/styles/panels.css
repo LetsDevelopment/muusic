@@ -1141,14 +1141,25 @@
   color: #f2f4f5;
 }
 
-.landing-title span:nth-child(n + 2) {
-  color: #b7bcc6;
+.landing-title-line {
+  position: relative;
+  display: inline-block;
+  min-height: 0.98em;
+  color: #f2f4f5;
 }
 
-.landing-title-cursor {
+.landing-title-line.is-muted {
+  color: #c7cdd6;
+}
+
+.landing-title-line.has-caret::after {
+  content: '';
   display: inline-block;
-  padding-right: 10px;
-  border-right: 2px solid rgba(255, 255, 255, 0.72);
+  width: 2px;
+  height: 0.88em;
+  margin-left: 10px;
+  vertical-align: -0.08em;
+  background: rgba(255, 255, 255, 0.72);
   animation: landingCaret 0.82s step-end infinite;
 }
 

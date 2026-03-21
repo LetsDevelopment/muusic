@@ -3,6 +3,7 @@ set -euo pipefail
 
 NGINX_SITE="${NGINX_SITE:-/etc/nginx/sites-available/muusic2.0}"
 PANEL_HOST="${PANEL_HOST:-}"
+ENV_FILE="${ENV_FILE:-.env}"
 
 fail() {
   echo "[smoke][FAIL] $1" >&2
@@ -25,6 +26,13 @@ need_cmd grep
 
 if [[ ! -f "$NGINX_SITE" ]]; then
   fail "Arquivo nginx nao encontrado: $NGINX_SITE"
+fi
+
+if [[ -z "$PANEL_HOST" && -f "$ENV_FILE" ]]; then
+  env_frontend_urls=$(grep -E '^FRONTEND_URLS=' "$ENV_FILE" | tail -n 1 | cut -d '=' -f 2- || true)
+  if [[ "$env_frontend_urls" == *"painel.muusic.live"* ]]; then
+    PANEL_HOST="painel.muusic.live"
+  fi
 fi
 
 assert_contains "$NGINX_SITE" "server_name muusic.live" "Nginx sem server_name muusic.live"
