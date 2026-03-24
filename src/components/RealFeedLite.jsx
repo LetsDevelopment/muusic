@@ -645,7 +645,10 @@ export default function RealFeedLite({
                     <span />
                     <span />
                   </div>
-                  <p>{selectedArtistDetail?.listenersLabel || '68.598 ouvintes no mapa'}</p>
+                  <p>
+                    <span className="artist-detail-listener-count">68.598</span>{' '}
+                    <span className="artist-detail-listener-copy">ouvintes no mapa</span>
+                  </p>
                 </div>
               </div>
             </div>
