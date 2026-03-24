@@ -64,6 +64,58 @@ function buildRealtimeNowPlayingPayload(nowPlaying) {
   };
 }
 
+function slugifyArtist(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'artista';
+}
+
+function buildArtistSections(name) {
+  const safeName = name || 'Artista';
+  const baseKey = slugifyArtist(safeName);
+  return {
+    albums: [
+      { id: `${baseKey}-album-1`, title: 'Herança Boiadeira Rodeio (Ao Vivo)', subtitle: 'Último lançamento', meta: '2025', image: 'https://picsum.photos/seed/artist-album-1/520/520' },
+      { id: `${baseKey}-album-2`, title: 'Lets Go Rodeo', subtitle: 'Álbum', meta: '2025', image: 'https://picsum.photos/seed/artist-album-2/520/520' },
+      { id: `${baseKey}-album-3`, title: 'Boiadeira Internacional', subtitle: 'Ao vivo', meta: '2024', image: 'https://picsum.photos/seed/artist-album-3/520/520' },
+      { id: `${baseKey}-album-4`, title: 'Estrada e Coração', subtitle: 'Sessão especial', meta: '2023', image: 'https://picsum.photos/seed/artist-album-4/520/520' }
+    ],
+    tracks: [
+      { id: `${baseKey}-track-1`, title: 'Solteiro Forçado', subtitle: safeName, meta: '3:01', image: 'https://picsum.photos/seed/artist-track-1/520/520' },
+      { id: `${baseKey}-track-2`, title: 'Minha Herança', subtitle: safeName, meta: '2:54', image: 'https://picsum.photos/seed/artist-track-2/520/520' },
+      { id: `${baseKey}-track-3`, title: 'Tô Voltando', subtitle: safeName, meta: '3:18', image: 'https://picsum.photos/seed/artist-track-3/520/520' },
+      { id: `${baseKey}-track-4`, title: 'Rodeio em Mim', subtitle: safeName, meta: '2:47', image: 'https://picsum.photos/seed/artist-track-4/520/520' }
+    ],
+    singles: [
+      { id: `${baseKey}-single-1`, title: 'Coração Sertanejo', subtitle: 'Single', meta: '2025', image: 'https://picsum.photos/seed/artist-single-1/520/520' },
+      { id: `${baseKey}-single-2`, title: 'Mapa do Amor', subtitle: 'Single', meta: '2024', image: 'https://picsum.photos/seed/artist-single-2/520/520' },
+      { id: `${baseKey}-single-3`, title: 'Noite no Interior', subtitle: 'Single', meta: '2024', image: 'https://picsum.photos/seed/artist-single-3/520/520' },
+      { id: `${baseKey}-single-4`, title: 'Cavalo de Fogo', subtitle: 'Single', meta: '2023', image: 'https://picsum.photos/seed/artist-single-4/520/520' }
+    ],
+    shows: [
+      { id: `${baseKey}-show-1`, title: 'Arena Goiânia', subtitle: 'Goiânia, Brasil', meta: '28 mar', image: 'https://picsum.photos/seed/artist-show-1/520/520' },
+      { id: `${baseKey}-show-2`, title: 'Villa Country', subtitle: 'São Paulo, Brasil', meta: '04 abr', image: 'https://picsum.photos/seed/artist-show-2/520/520' },
+      { id: `${baseKey}-show-3`, title: 'Espaço Hall', subtitle: 'Rio de Janeiro, Brasil', meta: '11 abr', image: 'https://picsum.photos/seed/artist-show-3/520/520' },
+      { id: `${baseKey}-show-4`, title: 'Mineirão Sessions', subtitle: 'Belo Horizonte, Brasil', meta: '18 abr', image: 'https://picsum.photos/seed/artist-show-4/520/520' }
+    ]
+  };
+}
+
+function buildArtistDetail(payload = {}) {
+  const name = payload.name || payload.artistName || payload.artist || 'Artista';
+  return {
+    id: payload.id || payload.artistId || `artist:${slugifyArtist(name)}`,
+    name,
+    heroImage: payload.heroImage || payload.artistImage || payload.albumImage || payload.thumbUrl || null,
+    listenersLabel: payload.listenersLabel || '68.598 ouvintes no mapa',
+    initialTab: payload.initialTab || 'albums',
+    sections: payload.sections || buildArtistSections(name)
+  };
+}
+
 export default function App() {
   const {
     authMode,
@@ -107,6 +159,7 @@ export default function App() {
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
   const [selectedEventFeed, setSelectedEventFeed] = useState(null);
   const [selectedShowDetail, setSelectedShowDetail] = useState(null);
+  const [selectedArtistDetail, setSelectedArtistDetail] = useState(null);
   const [selectedSimProfile, setSelectedSimProfile] = useState(null);
   const [accountSettings, setAccountSettings] = useState(DEFAULT_ACCOUNT_SETTINGS);
   const [dbMapUsers, setDbMapUsers] = useState([]);
@@ -153,6 +206,8 @@ export default function App() {
   const perfProfile = isMobileDevice ? MOBILE_PERF : DESKTOP_PERF;
   const simulatedPoints = useMemo(() => buildSimulatedPoints(perfProfile.points), [perfProfile.points]);
   const handleMapShowSelect = useCallback((show) => {
+    setSelectedArtistDetail(null);
+    setSelectedSimProfile(null);
     setSelectedShowDetail(show);
     setRightPanelCollapsed(false);
   }, []);
@@ -192,6 +247,8 @@ export default function App() {
     (user) => {
       const profile = resolveUserProfile(user);
       if (!profile) return;
+      setSelectedArtistDetail(null);
+      setSelectedShowDetail(null);
       setSelectedSimProfile(profile);
       setRightPanelCollapsed(false);
     },
@@ -200,6 +257,8 @@ export default function App() {
 
   const openUserProfileDetail = useCallback((profile) => {
     if (!profile) return;
+    setSelectedArtistDetail(null);
+    setSelectedShowDetail(null);
     setSelectedSimProfile({
       ...(profile || {}),
       bio: profile?.bio || '',
@@ -209,6 +268,18 @@ export default function App() {
     });
     setRightPanelCollapsed(false);
   }, []);
+
+
+  const openArtistDetail = useCallback(
+    (artistPayload) => {
+      if (!artistPayload || isMobileDevice) return;
+      setSelectedShowDetail(null);
+      setSelectedSimProfile(null);
+      setSelectedArtistDetail(buildArtistDetail(artistPayload));
+      setRightPanelCollapsed(false);
+    },
+    [isMobileDevice]
+  );
   const handleViewportChange = useCallback((nextViewport) => {
     if (!nextViewport) return;
     setMapViewport((prev) => {
@@ -452,6 +523,8 @@ export default function App() {
 
   const handleSearchShowSelect = useCallback((show) => {
     if (!show) return;
+    setSelectedArtistDetail(null);
+    setSelectedSimProfile(null);
     setSelectedShowDetail(show);
     setRightPanelCollapsed(false);
   }, []);
@@ -717,11 +790,14 @@ export default function App() {
       <RealFeedLite
         onFocusItem={focusFeedItem}
         onOpenItem={openFeedItem}
+        onArtistClick={openArtistDetail}
         onShowsChange={setShows}
         socketRef={socketRef}
         realtimeReady={joined}
         selectedShowDetail={selectedShowDetail}
         onCloseShowDetail={() => setSelectedShowDetail(null)}
+        selectedArtistDetail={selectedArtistDetail}
+        onCloseArtistDetail={() => setSelectedArtistDetail(null)}
         selectedUserDetail={selectedSimProfile}
         onCloseUserDetail={() => setSelectedSimProfile(null)}
         onUserClick={(userProfile) => openUserProfileDetail(userProfile)}
@@ -757,7 +833,22 @@ export default function App() {
               <p className={useMarqueeTitle ? 'now-playing-title marquee' : 'now-playing-title'}>
                 <span>{spotifyTrackName}</span>
               </p>
-              <p className="now-playing-artist">{spotifyArtistName}</p>
+              <button
+                type="button"
+                className={isMobileDevice ? 'now-playing-artist' : 'now-playing-artist now-playing-artist-button'}
+                onClick={() =>
+                  openArtistDetail({
+                    artistId: activeUser?.nowPlaying?.artistId,
+                    name: spotifyArtistName,
+                    artistImage: activeUser?.nowPlaying?.artistImage,
+                    albumImage: activeUser?.nowPlaying?.albumImage,
+                    heroImage: activeUser?.nowPlaying?.artistImage || activeUser?.nowPlaying?.albumImage || activeUser?.spotify?.image || null
+                  })
+                }
+                disabled={isMobileDevice}
+              >
+                {spotifyArtistName}
+              </button>
             </div>
           </div>
         ) : (

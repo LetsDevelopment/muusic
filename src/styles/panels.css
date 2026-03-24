@@ -119,6 +119,10 @@
   overflow: hidden;
 }
 
+.right-panel.artist-detail-mode .feed-box.show-detail-mode {
+  padding: 0;
+}
+
 .feed-empty {
   height: 100%;
   min-height: 220px;
@@ -482,6 +486,207 @@
   border-radius: 0;
   overflow: hidden;
   background: rgba(9, 12, 18, 0.92);
+}
+
+.artist-detail-card {
+  display: grid;
+  grid-template-rows: minmax(360px, 46vh) 1fr;
+  width: 100%;
+  height: 100%;
+  background: #040506;
+}
+
+.artist-detail-hero {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.artist-detail-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.92);
+}
+
+.artist-detail-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.12) 0%, rgba(0, 0, 0, 0.32) 40%, rgba(0, 0, 0, 0.92) 100%),
+    linear-gradient(180deg, rgba(94, 53, 125, 0.22) 0%, rgba(0, 0, 0, 0) 36%);
+}
+
+.artist-detail-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 56px;
+  height: 56px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(11, 13, 16, 0.78);
+  color: #f7f8fb;
+  display: grid;
+  place-items: center;
+  z-index: 2;
+}
+
+.artist-detail-copy {
+  position: absolute;
+  left: 38px;
+  right: 38px;
+  bottom: 34px;
+  z-index: 2;
+  display: grid;
+  gap: 14px;
+}
+
+.artist-detail-copy h3 {
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(46px, 5vw, 62px);
+  line-height: 0.96;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+}
+
+.artist-detail-listener-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.artist-detail-listener-row p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.74);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.artist-detail-listeners-avatars {
+  display: flex;
+  align-items: center;
+  padding-left: 10px;
+}
+
+.artist-detail-listeners-avatars span {
+  width: 28px;
+  height: 28px;
+  margin-left: -10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background-size: cover;
+  background-position: center;
+}
+
+.artist-detail-listeners-avatars span:nth-child(1) {
+  background-image: linear-gradient(135deg, #ca8f67, #84553d);
+}
+
+.artist-detail-listeners-avatars span:nth-child(2) {
+  background-image: linear-gradient(135deg, #f4b55c, #b25f23);
+}
+
+.artist-detail-listeners-avatars span:nth-child(3) {
+  background-image: linear-gradient(135deg, #c77ac8, #7a3b8d);
+}
+
+.artist-detail-body {
+  min-height: 0;
+  overflow: auto;
+  padding: 0 40px 28px;
+  display: grid;
+  align-content: start;
+  gap: 24px;
+  background:
+    linear-gradient(180deg, rgba(4, 5, 6, 0.98) 0%, rgba(4, 5, 6, 1) 100%);
+}
+
+.artist-detail-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, auto) 1fr;
+  align-items: end;
+  gap: 26px;
+  min-height: 74px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.artist-detail-tabs .feed-tab {
+  padding-bottom: 22px;
+}
+
+.artist-detail-search-btn {
+  justify-self: end;
+  align-self: center;
+  border: 0;
+  background: transparent;
+  color: #f2f5fa;
+  padding: 0 0 18px;
+}
+
+.artist-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px 18px;
+  align-content: start;
+}
+
+.artist-detail-item {
+  display: grid;
+  gap: 12px;
+}
+
+.artist-detail-item-cover {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 4px;
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.artist-detail-item-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.artist-detail-item-copy h4 {
+  margin: 0;
+  color: #f5f7fb;
+  font-size: 15px;
+  line-height: 1.18;
+  font-weight: 800;
+}
+
+.artist-detail-item-subtitle,
+.artist-detail-item-meta {
+  margin: 0;
+  font-size: 12px;
+}
+
+.artist-detail-item-subtitle {
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.artist-detail-item-meta {
+  color: rgba(255, 255, 255, 0.38);
+}
+
+.artist-detail-inline-trigger {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: inherit;
+  text-align: left;
+  padding: 0;
+  cursor: pointer;
+}
+
+.artist-detail-inline-trigger:hover {
+  color: #ffffff;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .show-detail-cover {

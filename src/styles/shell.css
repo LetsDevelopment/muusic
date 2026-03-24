@@ -941,6 +941,25 @@
   font-weight: 700;
 }
 
+.now-playing-artist-button {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.now-playing-artist-button:hover {
+  color: #f2f6fc;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.now-playing-artist-button:disabled {
+  cursor: default;
+  text-decoration: none;
+}
+
 .spotify-eq {
   display: inline-flex;
   align-items: flex-end;

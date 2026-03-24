@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ChevronLeft, ChevronRight, Heart, MessageCircle, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Heart, MessageCircle, Search, X } from 'lucide-react';
 import { API_URL } from '../config/appConfig';
 import BuzzCommunitiesPanel from './BuzzCommunitiesPanel';
 import UserProfile from './user-profile/UserProfile';
@@ -117,11 +117,14 @@ function capForumMap(map, keepId) {
 export default function RealFeedLite({
   onFocusItem,
   onOpenItem,
+  onArtistClick,
   onShowsChange,
   socketRef,
   realtimeReady,
   selectedShowDetail,
   onCloseShowDetail,
+  selectedArtistDetail,
+  onCloseArtistDetail,
   selectedUserDetail,
   onCloseUserDetail,
   onUserClick,
@@ -137,6 +140,7 @@ export default function RealFeedLite({
 
   const [shows, setShows] = useState([]);
   const [showDetailTab, setShowDetailTab] = useState('info');
+  const [artistDetailTab, setArtistDetailTab] = useState('albums');
   const [showForumById, setShowForumById] = useState({});
   const [showPostDraft, setShowPostDraft] = useState('');
   const [showCommentDrafts, setShowCommentDrafts] = useState({});
@@ -218,6 +222,11 @@ export default function RealFeedLite({
     setShowDetailTab('info');
     setShowPostDraft('');
   }, [selectedShowDetail?.id]);
+
+  useEffect(() => {
+    if (!selectedArtistDetail?.id) return;
+    setArtistDetailTab(selectedArtistDetail.initialTab || 'albums');
+  }, [selectedArtistDetail?.id, selectedArtistDetail?.initialTab]);
 
   const showsForRender = useMemo(() => {
     const monthAbbr = ['jan.', 'fev.', 'mar.', 'abr.', 'mai.', 'jun.', 'jul.', 'ago.', 'set.', 'out.', 'nov.', 'dez.'];
@@ -397,6 +406,11 @@ export default function RealFeedLite({
     });
   }
 
+  function openArtistDetail(artistPayload) {
+    if (!artistPayload?.name && !artistPayload?.artist && !artistPayload?.artistName) return;
+    onArtistClick?.(artistPayload);
+  }
+
   if (collapsed) {
     return (
       <button type="button" className="right-panel-expand" onClick={onToggleCollapse} aria-label="Expandir painel">
@@ -406,14 +420,18 @@ export default function RealFeedLite({
   }
 
   const isShowDetailOpen = Boolean(selectedShowDetail);
-  const isUserDetailOpen = !isShowDetailOpen && Boolean(selectedUserDetail);
-  const isDetailOpen = isShowDetailOpen || isUserDetailOpen;
+  const isArtistDetailOpen = !isShowDetailOpen && Boolean(selectedArtistDetail);
+  const isUserDetailOpen = !isShowDetailOpen && !isArtistDetailOpen && Boolean(selectedUserDetail);
+  const isDetailOpen = isShowDetailOpen || isArtistDetailOpen || isUserDetailOpen;
   const showDetailThumb = selectedShowDetail?.thumbUrl || `https://picsum.photos/seed/${encodeURIComponent(selectedShowDetail?.artist || 'evento')}/900/560`;
-  const rightPanelClassName = isUserDetailOpen ? 'right-panel user-profile-mode' : 'right-panel';
+  const artistSections = selectedArtistDetail?.sections || {};
+  const artistItems = artistSections[artistDetailTab] || [];
+  const artistHeroImage = selectedArtistDetail?.heroImage || `https://picsum.photos/seed/${encodeURIComponent(selectedArtistDetail?.name || 'artista')}/1200/1600`;
+  const rightPanelClassName = isUserDetailOpen ? 'right-panel user-profile-mode' : isArtistDetailOpen ? 'right-panel artist-detail-mode' : 'right-panel';
 
   return (
     <div className={rightPanelClassName}>
-      {!isUserDetailOpen && (
+      {!isUserDetailOpen && !isArtistDetailOpen && (
         <div className="right-head">
           {!isDetailOpen ? (
             <div className="feed-tabs">
@@ -442,7 +460,21 @@ export default function RealFeedLite({
             <img src={showDetailThumb} alt={selectedShowDetail?.artist || 'Evento'} className="show-detail-cover" />
             <div className="show-detail-body">
               <div className="show-detail-head">
-                <h3>{selectedShowDetail?.artist || 'Evento'}</h3>
+                <h3>
+                  <button
+                    type="button"
+                    className="artist-detail-inline-trigger"
+                    onClick={() =>
+                      openArtistDetail({
+                        artistId: selectedShowDetail?.artistId,
+                        name: selectedShowDetail?.artist || 'Evento',
+                        thumbUrl: selectedShowDetail?.thumbUrl || null
+                      })
+                    }
+                  >
+                    {selectedShowDetail?.artist || 'Evento'}
+                  </button>
+                </h3>
                 <button type="button" className="show-detail-close" onClick={onCloseShowDetail} aria-label="Fechar">
                   <X size={16} />
                 </button>
@@ -597,6 +629,62 @@ export default function RealFeedLite({
           </article>
         )}
 
+        {isArtistDetailOpen && (
+          <article className="artist-detail-card">
+            <div className="artist-detail-hero">
+              <img src={artistHeroImage} alt={selectedArtistDetail?.name || 'Artista'} className="artist-detail-cover" />
+              <div className="artist-detail-overlay" />
+              <button type="button" className="artist-detail-close" onClick={onCloseArtistDetail} aria-label="Fechar">
+                <X size={20} />
+              </button>
+              <div className="artist-detail-copy">
+                <h3>{selectedArtistDetail?.name || 'Artista'}</h3>
+                <div className="artist-detail-listener-row">
+                  <div className="artist-detail-listeners-avatars" aria-hidden="true">
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+                  <p>{selectedArtistDetail?.listenersLabel || '68.598 ouvintes no mapa'}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="artist-detail-body">
+              <div className="artist-detail-tabs">
+                <button type="button" className={artistDetailTab === 'albums' ? 'feed-tab active' : 'feed-tab'} onClick={() => setArtistDetailTab('albums')}>
+                  Álbuns
+                </button>
+                <button type="button" className={artistDetailTab === 'tracks' ? 'feed-tab active' : 'feed-tab'} onClick={() => setArtistDetailTab('tracks')}>
+                  Faixas
+                </button>
+                <button type="button" className={artistDetailTab === 'singles' ? 'feed-tab active' : 'feed-tab'} onClick={() => setArtistDetailTab('singles')}>
+                  Singles
+                </button>
+                <button type="button" className={artistDetailTab === 'shows' ? 'feed-tab active' : 'feed-tab'} onClick={() => setArtistDetailTab('shows')}>
+                  Shows
+                </button>
+                <button type="button" className="artist-detail-search-btn" aria-label="Buscar">
+                  <Search size={18} />
+                </button>
+              </div>
+
+              <div className="artist-detail-grid">
+                {artistItems.map((item) => (
+                  <article key={item.id} className="artist-detail-item">
+                    <img src={item.image} alt={item.title} className="artist-detail-item-cover" />
+                    <div className="artist-detail-item-copy">
+                      <h4>{item.title}</h4>
+                      <p className="artist-detail-item-subtitle">{item.subtitle}</p>
+                      <p className="artist-detail-item-meta">{item.meta}</p>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </article>
+        )}
+
         {isUserDetailOpen && (
           <UserProfile profile={selectedUserDetail} onBack={onCloseUserDetail} onForward={onToggleCollapse} onChatOpen={onUserChat} />
         )}
@@ -707,7 +795,21 @@ export default function RealFeedLite({
                 <div key={show.id} className="show-card">
                   <img src={show.thumb} alt={show.artist} width="56" height="56" className="show-thumb" />
                   <div className="show-copy">
-                    <p className="show-artist">{show.artist}</p>
+                    <p className="show-artist">
+                      <button
+                        type="button"
+                        className="artist-detail-inline-trigger"
+                        onClick={() =>
+                          openArtistDetail({
+                            id: `artist:${show.id}`,
+                            name: show.artist,
+                            thumbUrl: show.thumb
+                          })
+                        }
+                      >
+                        {show.artist}
+                      </button>
+                    </p>
                     <p className="show-meta">
                       {show.dateLabel} •{' '}
                       <button type="button" className="show-venue-link" onClick={() => onFocusItem({ coords: show.coords, city: show.city, country: show.country })}>
