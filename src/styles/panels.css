@@ -3034,3 +3034,294 @@
 .sim-popup-content strong {
   color: #9ce6b4;
 }
+
+.music-onboarding-page {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  background:
+    radial-gradient(circle at top, rgba(251, 40, 88, 0.16), transparent 32%),
+    radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.09), transparent 24%),
+    rgba(3, 6, 10, 0.94);
+}
+
+.music-onboarding-backdrop {
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(16px);
+}
+
+.music-onboarding-shell {
+  position: relative;
+  width: min(1080px, 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  background: rgba(8, 12, 18, 0.9);
+  box-shadow: 0 28px 100px rgba(0, 0, 0, 0.42);
+  padding: 28px;
+  display: grid;
+  gap: 24px;
+}
+
+.music-onboarding-header {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 18px;
+  align-items: start;
+}
+
+.music-onboarding-logo {
+  width: 54px;
+  height: 54px;
+  object-fit: contain;
+}
+
+.music-onboarding-kicker {
+  margin: 0 0 6px;
+  color: #ff94ac;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.music-onboarding-header h1 {
+  margin: 0;
+  color: #f8fbff;
+  font-size: clamp(30px, 4vw, 48px);
+  line-height: 1;
+}
+
+.music-onboarding-copy {
+  margin: 10px 0 0;
+  max-width: 760px;
+  color: #b8c2d1;
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+.music-onboarding-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.music-provider-card {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
+  padding: 22px;
+  display: grid;
+  gap: 14px;
+}
+
+.music-provider-card.is-primary {
+  border-color: rgba(251, 40, 88, 0.28);
+  box-shadow: inset 0 0 0 1px rgba(251, 40, 88, 0.08);
+}
+
+.music-provider-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  color: #fff1f4;
+  background: rgba(251, 40, 88, 0.24);
+}
+
+.music-provider-icon.is-secondary {
+  color: #eaf0fb;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.music-provider-head {
+  display: grid;
+  gap: 4px;
+}
+
+.music-provider-badge {
+  margin: 0;
+  color: #ff94ac;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.music-provider-badge.is-secondary {
+  color: #91a0b6;
+}
+
+.music-provider-head h2 {
+  margin: 0;
+  color: #f8fbff;
+  font-size: 26px;
+}
+
+.music-provider-description {
+  margin: 0;
+  color: #b9c4d3;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.music-provider-list {
+  margin: 0;
+  padding-left: 18px;
+  color: #dde5f0;
+  display: grid;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.music-provider-error {
+  margin: 0;
+  color: #ffb5c3;
+  font-size: 12px;
+}
+
+.music-provider-button {
+  min-height: 46px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--brand-red);
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.music-provider-button.is-secondary,
+.music-onboarding-skip {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f2f6fb;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.music-onboarding-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.music-onboarding-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #b3bece;
+  font-size: 13px;
+}
+
+.music-onboarding-skip {
+  min-height: 42px;
+  border-radius: 12px;
+  padding: 0 16px;
+}
+
+.account-connections-section {
+  margin-top: 10px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: grid;
+  gap: 14px;
+}
+
+.account-connections-head h3 {
+  margin: 0;
+  color: #f4f6fb;
+  font-size: 18px;
+}
+
+.account-connections-head p {
+  margin: 6px 0 0;
+  color: #a5b0c0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.account-connections-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.account-connection-card {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 14px;
+  display: grid;
+  gap: 12px;
+}
+
+.account-connection-card.is-primary {
+  border-color: rgba(251, 40, 88, 0.22);
+}
+
+.account-connection-kicker {
+  margin: 0 0 6px;
+  color: #9aa8bc;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.account-connection-card h4 {
+  margin: 0;
+  color: #f6f8fc;
+  font-size: 18px;
+}
+
+.account-connection-copy {
+  margin: 8px 0 0;
+  color: #b4becd;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.account-connection-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.account-connection-status {
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.06);
+  color: #c5cedb;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.account-connection-status.is-on {
+  background: rgba(29, 185, 84, 0.16);
+  color: #d7ffe6;
+}
+
+.music-provider-chip {
+  position: absolute;
+  top: 26px;
+  left: 102px;
+  z-index: 17;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(251, 40, 88, 0.22);
+  background: rgba(10, 14, 20, 0.88);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.24);
+  color: #f6f8fc;
+  font-size: 12px;
+  font-weight: 600;
+}

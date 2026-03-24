@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 export function createLastFmRouter({
   jwtSecret,
   frontendUrl,
+  lastfmCallbackUrl,
   readAuthSession,
   sessionService,
   userService,
@@ -16,6 +17,22 @@ export function createLastFmRouter({
   lastfmApiKey
 }) {
   const router = Router();
+  const toSafeUser = (user) => ({
+    id: user?.id,
+    name: user?.name || user?.displayName || user?.username || 'Usuario',
+    email: user?.email || '',
+    role: user?.role === 'ADMIN' ? 'ADMIN' : 'USER',
+    avatarUrl: user?.avatarUrl || null,
+    musicProvider: user?.musicProvider || null,
+    onboardingMusicCompleted: Boolean(user?.onboardingMusicCompleted),
+    lastfm: user?.lastfmUsername
+      ? {
+          username: user.lastfmUsername,
+          connectedAt: user.lastfmConnectedAt || null,
+          profileUrl: `https://www.last.fm/user/${encodeURIComponent(user.lastfmUsername)}`
+        }
+      : null
+  });
 
   router.post('/auth/lastfm/connect', async (req, res) => {
     try {
@@ -36,7 +53,7 @@ export function createLastFmRouter({
         { expiresIn: '10m' }
       );
 
-      const callbackUrl = new URL('/auth/lastfm/callback', frontendUrl);
+      const callbackUrl = new URL(lastfmCallbackUrl);
       callbackUrl.searchParams.set('flow', flow);
 
       const authUrl = new URL('https://www.last.fm/api/auth/');
@@ -132,7 +149,7 @@ export function createLastFmRouter({
 
       const updatedUser = await userService.findById(auth.user.id);
       return res.json({
-        user: updatedUser,
+        user: toSafeUser(updatedUser),
         lastfm: pending.lastfm,
         musicProvider: pending.musicProvider,
         onboardingMusicCompleted: pending.onboardingMusicCompleted,
@@ -193,7 +210,7 @@ export function createLastFmRouter({
       });
 
       const updatedUser = await userService.findById(auth.user.id);
-      return res.json({ ok: true, user: updatedUser });
+      return res.json({ ok: true, user: toSafeUser(updatedUser) });
     } catch (error) {
       return res.status(500).json({ error: `Falha ao desconectar Last.fm: ${error.message}` });
     }
@@ -210,7 +227,7 @@ export function createLastFmRouter({
       });
       return res.json({
         ok: true,
-        user: updatedUser
+        user: toSafeUser(updatedUser)
       });
     } catch (error) {
       return res.status(500).json({ error: `Falha ao salvar onboarding musical: ${error.message}` });

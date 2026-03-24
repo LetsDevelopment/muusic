@@ -48,6 +48,7 @@ export function createSpotifyApiService({ spotifyClientId, spotifyClientSecret, 
         : null;
 
       return {
+        source: 'spotify',
         trackId: item.id || null,
         trackName: item.name || null,
         artistId: primaryArtistId,
@@ -55,6 +56,7 @@ export function createSpotifyApiService({ spotifyClientId, spotifyClientSecret, 
         artists,
         artistImage,
         albumImage: item.album?.images?.[0]?.url || null,
+        externalUrl: item.external_urls?.spotify || null,
         isPlaying: Boolean(playbackRes.data?.is_playing),
         progressMs: typeof playbackRes.data?.progress_ms === 'number' ? playbackRes.data.progress_ms : null,
         durationMs: typeof item.duration_ms === 'number' ? item.duration_ms : null

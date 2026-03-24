@@ -367,6 +367,7 @@ app.use(
   createLastFmRouter({
     jwtSecret: JWT_SECRET,
     frontendUrl: FRONTEND_URL,
+    lastfmCallbackUrl: process.env.LASTFM_CALLBACK_URL || `${FRONTEND_URL}/auth/lastfm/callback`,
     readAuthSession,
     sessionService,
     userService,

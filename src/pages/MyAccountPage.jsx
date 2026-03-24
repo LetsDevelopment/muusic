@@ -19,7 +19,18 @@ function countBio(value) {
   return String(value || '').length;
 }
 
-export default function MyAccountPage({ authUser, onBack, onSettingsChange, onLogout }) {
+export default function MyAccountPage({
+  authUser,
+  onBack,
+  onSettingsChange,
+  onLogout,
+  onSpotifyConnect,
+  onSpotifyDisconnect,
+  onLastfmConnect,
+  onLastfmDisconnect,
+  spotifyConnecting,
+  lastfmConnecting
+}) {
   const authUserId = authUser?.id || '';
   const authUserToken = authUser?.token || '';
   const authUserSessionId = authUser?.sessionId || '';
@@ -366,6 +377,67 @@ export default function MyAccountPage({ authUser, onBack, onSettingsChange, onLo
                 {savingProfile ? 'Salvando...' : 'Salvar'}
               </button>
             </div>
+
+            <section className="account-connections-section">
+              <div className="account-connections-head">
+                <h3>Conexões</h3>
+                <p>Escolha como o Muusic lê sua presença musical e como enriquece catálogo e reprodução.</p>
+              </div>
+
+              <div className="account-connections-grid">
+                <article className="account-connection-card is-primary">
+                  <div>
+                    <p className="account-connection-kicker">Fonte ativa de presença</p>
+                    <h4>Last.fm</h4>
+                    <p className="account-connection-copy">
+                      {authUser?.lastfm?.username
+                        ? `Conectado como ${authUser.lastfm.username}. Essa é a fonte principal para te colocar no mapa em tempo real.`
+                        : 'Conecte o Last.fm para aparecer no mapa com o que você está ouvindo agora.'}
+                    </p>
+                  </div>
+                  <div className="account-connection-actions">
+                    <span className={authUser?.lastfm ? 'account-connection-status is-on' : 'account-connection-status'}>
+                      {authUser?.lastfm ? 'Conectado' : 'Não conectado'}
+                    </span>
+                    {authUser?.lastfm ? (
+                      <button type="button" className="account-secondary-btn" onClick={onLastfmDisconnect} disabled={lastfmConnecting}>
+                        {lastfmConnecting ? 'Desconectando...' : 'Desconectar'}
+                      </button>
+                    ) : (
+                      <button type="button" className="account-primary-btn" onClick={onLastfmConnect} disabled={lastfmConnecting}>
+                        {lastfmConnecting ? 'Conectando...' : 'Conectar Last.fm'}
+                      </button>
+                    )}
+                  </div>
+                </article>
+
+                <article className="account-connection-card">
+                  <div>
+                    <p className="account-connection-kicker">Catálogo e reprodução</p>
+                    <h4>Spotify</h4>
+                    <p className="account-connection-copy">
+                      {authUser?.spotify
+                        ? `Conectado como ${authUser.spotify.display_name || 'Spotify'}. Use para capas, embeds e links de reprodução.`
+                        : 'Conecte o Spotify para enriquecer artistas, faixas, álbuns e links da experiência.'}
+                    </p>
+                  </div>
+                  <div className="account-connection-actions">
+                    <span className={authUser?.spotify ? 'account-connection-status is-on' : 'account-connection-status'}>
+                      {authUser?.spotify ? 'Conectado' : 'Não conectado'}
+                    </span>
+                    {authUser?.spotify ? (
+                      <button type="button" className="account-secondary-btn" onClick={onSpotifyDisconnect}>
+                        Desconectar
+                      </button>
+                    ) : (
+                      <button type="button" className="account-secondary-btn" onClick={() => onSpotifyConnect?.('duo-room')} disabled={spotifyConnecting}>
+                        {spotifyConnecting ? 'Conectando...' : 'Conectar Spotify'}
+                      </button>
+                    )}
+                  </div>
+                </article>
+              </div>
+            </section>
           </div>
         )}
 
