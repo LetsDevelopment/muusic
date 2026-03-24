@@ -87,14 +87,16 @@ function buildArtistSections(name) {
               subtitle: 'Spotify embed',
               meta: '2025',
               image: 'https://picsum.photos/seed/artist-album-2/520/520',
+              albumId: '4NqeEHz29Ime2EZV8AUHkh',
               embedUrl: 'https://open.spotify.com/embed/album/4NqeEHz29Ime2EZV8AUHkh?utm_source=generator'
             }
           ]
-        : []),
-      { id: `${baseKey}-album-1`, title: 'Herança Boiadeira Rodeio (Ao Vivo)', subtitle: 'Último lançamento', meta: '2025', image: 'https://picsum.photos/seed/artist-album-1/520/520' },
-      { id: `${baseKey}-album-2`, title: 'Lets Go Rodeo', subtitle: 'Álbum', meta: '2025', image: 'https://picsum.photos/seed/artist-album-2/520/520' },
-      { id: `${baseKey}-album-3`, title: 'Boiadeira Internacional', subtitle: 'Ao vivo', meta: '2024', image: 'https://picsum.photos/seed/artist-album-3/520/520' },
-      { id: `${baseKey}-album-4`, title: 'Estrada e Coração', subtitle: 'Sessão especial', meta: '2023', image: 'https://picsum.photos/seed/artist-album-4/520/520' }
+        : [
+            { id: `${baseKey}-album-1`, title: 'Herança Boiadeira Rodeio (Ao Vivo)', subtitle: 'Último lançamento', meta: '2025', image: 'https://picsum.photos/seed/artist-album-1/520/520' },
+            { id: `${baseKey}-album-2`, title: 'Lets Go Rodeo', subtitle: 'Álbum', meta: '2025', image: 'https://picsum.photos/seed/artist-album-2/520/520' },
+            { id: `${baseKey}-album-3`, title: 'Boiadeira Internacional', subtitle: 'Ao vivo', meta: '2024', image: 'https://picsum.photos/seed/artist-album-3/520/520' },
+            { id: `${baseKey}-album-4`, title: 'Estrada e Coração', subtitle: 'Sessão especial', meta: '2023', image: 'https://picsum.photos/seed/artist-album-4/520/520' }
+          ])
     ],
     tracks: [
       {
@@ -130,13 +132,17 @@ function buildArtistSections(name) {
 
 function buildArtistDetail(payload = {}) {
   const name = payload.name || payload.artistName || payload.artist || 'Artista';
+  const sections = payload.sections || buildArtistSections(name);
+  const preferredAlbumId = payload.preferredAlbumId || sections.albums?.find((item) => item.albumId)?.albumId || null;
   return {
     id: payload.id || payload.artistId || `artist:${slugifyArtist(name)}`,
     name,
+    artistId: payload.artistId || null,
     heroImage: payload.heroImage || payload.artistImage || payload.albumImage || payload.thumbUrl || null,
     listenersLabel: payload.listenersLabel || '68.598 ouvintes no mapa',
     initialTab: payload.initialTab || 'albums',
-    sections: payload.sections || buildArtistSections(name)
+    preferredAlbumId,
+    sections
   };
 }
 
@@ -163,7 +169,8 @@ export default function App() {
     exchangeSpotifyCode,
     refreshSpotifyNowPlaying,
     spotifyError,
-    spotifyConnecting
+    spotifyConnecting,
+    setAuthUser
   } = useAuthFlow();
 
   const activeUser = authUser;
@@ -815,6 +822,16 @@ export default function App() {
         onFocusItem={focusFeedItem}
         onOpenItem={openFeedItem}
         onArtistClick={openArtistDetail}
+        spotifyToken={activeUser?.spotifyToken || ''}
+        onSpotifyTokenUpdate={(spotifyToken) => {
+          if (!spotifyToken) return;
+          setAuthUser((prev) => {
+            if (!prev || prev.spotifyToken === spotifyToken) return prev;
+            const next = { ...prev, spotifyToken };
+            localStorage.setItem(STORAGE_SESSION_KEY, JSON.stringify(next));
+            return next;
+          });
+        }}
         onShowsChange={setShows}
         socketRef={socketRef}
         realtimeReady={joined}

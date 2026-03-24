@@ -13,11 +13,36 @@ export function createSpotifyRouter({
   fetchSpotifyNowPlaying,
   refreshSpotifyAccessToken,
   buildSpotifyBasicHeader,
+  fetchSpotifyArtist,
+  searchSpotifyArtist,
+  fetchSpotifyAlbumTracks,
+  fetchSpotifyArtistTopTracks,
   cleanupSpotifyExchangeCodes,
   spotifyExchangeCodes,
   spotifyExchangeTtlMs
 }) {
   const router = Router();
+
+  function formatDuration(durationMs) {
+    const totalSeconds = Math.max(0, Math.floor(Number(durationMs || 0) / 1000));
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${String(seconds).padStart(2, '0')}`;
+  }
+
+  function normalizeTrack(track, fallbackAlbum = null) {
+    if (!track?.id) return null;
+    return {
+      id: track.id,
+      title: track.name || 'Faixa',
+      artists: Array.isArray(track.artists) ? track.artists.map((artist) => artist.name).filter(Boolean).join(', ') : '',
+      duration: formatDuration(track.duration_ms),
+      album: track.album?.name || fallbackAlbum?.name || '',
+      coverImage: track.album?.images?.[0]?.url || fallbackAlbum?.images?.[0]?.url || null,
+      spotifyUrl: track.external_urls?.spotify || null,
+      previewUrl: track.preview_url || null
+    };
+  }
 
   router.post('/auth/spotify/connect', async (req, res) => {
     try {
@@ -265,6 +290,97 @@ export function createSpotifyRouter({
           { expiresIn: '8h' }
         );
       }
+      return res.json(response);
+    } catch {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+  });
+
+  router.get('/auth/spotify/artist-tracks', async (req, res) => {
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    if (!token) return res.status(401).json({ error: 'Missing token' });
+
+    try {
+      const payload = jwt.verify(token, jwtSecret);
+      if (payload?.type !== 'spotify-auth') {
+        return res.status(401).json({ error: 'Invalid token type' });
+      }
+
+      let accessToken = payload.accessToken;
+      let refreshToken = payload.refreshToken || null;
+      let tokenExpiresAt = Number(payload.tokenExpiresAt || 0);
+      if (!accessToken) {
+        return res.status(400).json({ error: 'Spotify token payload missing access token' });
+      }
+      if (tokenExpiresAt && Date.now() >= tokenExpiresAt - 30_000) {
+        const refreshed = await refreshSpotifyAccessToken(refreshToken);
+        if (refreshed?.accessToken) {
+          accessToken = refreshed.accessToken;
+          refreshToken = refreshed.refreshToken;
+          tokenExpiresAt = Date.now() + refreshed.expiresIn * 1000;
+        }
+      }
+
+      const queryArtistId = String(req.query.artistId || '').trim();
+      const queryArtistName = String(req.query.artistName || '').trim();
+      const queryAlbumId = String(req.query.albumId || '').trim();
+
+      let artist = queryArtistId ? await fetchSpotifyArtist(accessToken, queryArtistId) : null;
+      if (!artist && queryArtistName) {
+        artist = await searchSpotifyArtist(accessToken, queryArtistName);
+      }
+
+      let album = null;
+      let tracks = [];
+
+      if (queryAlbumId) {
+        album = await fetchSpotifyAlbumTracks(accessToken, queryAlbumId);
+        tracks = Array.isArray(album?.tracks?.items)
+          ? album.tracks.items.map((track) => normalizeTrack(track, album)).filter(Boolean)
+          : [];
+      }
+
+      if (!tracks.length && artist?.id) {
+        const topTracks = await fetchSpotifyArtistTopTracks(accessToken, artist.id);
+        tracks = topTracks.map((track) => normalizeTrack(track)).filter(Boolean);
+      }
+
+      if (!tracks.length) {
+        return res.status(404).json({ error: 'Nenhuma faixa encontrada para este artista.' });
+      }
+
+      const response = {
+        artist: {
+          id: artist?.id || queryArtistId || null,
+          name: artist?.name || queryArtistName || '',
+          image: artist?.images?.[0]?.url || null
+        },
+        source: album?.id ? 'album' : 'artist-top-tracks',
+        album: album
+          ? {
+              id: album.id,
+              name: album.name || '',
+              image: album.images?.[0]?.url || null,
+              releaseDate: album.release_date || ''
+            }
+          : null,
+        tracks
+      };
+
+      if (refreshToken && accessToken !== payload.accessToken) {
+        response.spotifyToken = jwt.sign(
+          {
+            ...payload,
+            accessToken,
+            refreshToken,
+            tokenExpiresAt
+          },
+          jwtSecret,
+          { expiresIn: '8h' }
+        );
+      }
+
       return res.json(response);
     } catch {
       return res.status(401).json({ error: 'Invalid token' });

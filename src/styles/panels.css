@@ -832,11 +832,22 @@
   gap: 22px;
 }
 
+.artist-tracks-loading {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 13px;
+}
+
 .artist-track-row {
   display: grid;
   grid-template-columns: 50px minmax(0, 1fr) auto;
   align-items: center;
   gap: 16px;
+}
+
+.artist-track-link-row {
+  color: inherit;
+  text-decoration: none;
 }
 
 .artist-track-play {

@@ -118,6 +118,8 @@ export default function RealFeedLite({
   onFocusItem,
   onOpenItem,
   onArtistClick,
+  spotifyToken,
+  onSpotifyTokenUpdate,
   onShowsChange,
   socketRef,
   realtimeReady,
@@ -141,6 +143,7 @@ export default function RealFeedLite({
   const [shows, setShows] = useState([]);
   const [showDetailTab, setShowDetailTab] = useState('info');
   const [artistDetailTab, setArtistDetailTab] = useState('albums');
+  const [artistTracksState, setArtistTracksState] = useState({ status: 'idle', tracks: [], album: null });
   const [showForumById, setShowForumById] = useState({});
   const [showPostDraft, setShowPostDraft] = useState('');
   const [showCommentDrafts, setShowCommentDrafts] = useState({});
@@ -240,6 +243,69 @@ export default function RealFeedLite({
     if (!selectedArtistDetail?.id) return;
     setArtistDetailTab(selectedArtistDetail.initialTab || 'albums');
   }, [selectedArtistDetail?.id, selectedArtistDetail?.initialTab]);
+
+  useEffect(() => {
+    if (!selectedArtistDetail?.id) {
+      setArtistTracksState({ status: 'idle', tracks: [], album: null });
+      return;
+    }
+    if (artistDetailTab !== 'tracks') return;
+    if (!spotifyToken) {
+      setArtistTracksState({ status: 'fallback', tracks: [], album: null });
+      return;
+    }
+
+    let cancelled = false;
+    const fallbackRelease = selectedArtistDetail?.sections?.tracks?.[0] || null;
+
+    async function loadArtistTracks() {
+      setArtistTracksState((prev) => ({ ...prev, status: 'loading' }));
+
+      try {
+        const params = new URLSearchParams();
+        if (selectedArtistDetail.artistId) params.set('artistId', selectedArtistDetail.artistId);
+        if (selectedArtistDetail.name) params.set('artistName', selectedArtistDetail.name);
+        if (selectedArtistDetail.preferredAlbumId) params.set('albumId', selectedArtistDetail.preferredAlbumId);
+
+        const response = await fetch(`${API_URL}/auth/spotify/artist-tracks?${params.toString()}`, {
+          headers: {
+            Authorization: `Bearer ${spotifyToken}`
+          }
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (cancelled) return;
+
+        if (!response.ok || !Array.isArray(payload?.tracks) || !payload.tracks.length) {
+          setArtistTracksState({ status: 'fallback', tracks: fallbackRelease?.tracks || [], album: fallbackRelease || null });
+          return;
+        }
+
+        if (payload?.spotifyToken) {
+          onSpotifyTokenUpdate?.(payload.spotifyToken);
+        }
+
+        setArtistTracksState({
+          status: 'ready',
+          tracks: payload.tracks,
+          album: payload.album
+            ? {
+                title: payload.album.name || fallbackRelease?.title || 'Lançamento',
+                subtitle: payload.album.releaseDate || fallbackRelease?.subtitle || '',
+                image: payload.album.image || fallbackRelease?.image || null
+              }
+            : fallbackRelease || null
+        });
+      } catch {
+        if (cancelled) return;
+        setArtistTracksState({ status: 'fallback', tracks: fallbackRelease?.tracks || [], album: fallbackRelease || null });
+      }
+    }
+
+    loadArtistTracks();
+    return () => {
+      cancelled = true;
+    };
+  }, [artistDetailTab, onSpotifyTokenUpdate, selectedArtistDetail, spotifyToken]);
 
   const showsForRender = useMemo(() => {
     const monthAbbr = ['jan.', 'fev.', 'mar.', 'abr.', 'mai.', 'jun.', 'jul.', 'ago.', 'set.', 'out.', 'nov.', 'dez.'];
@@ -749,42 +815,73 @@ export default function RealFeedLite({
                 )}
 
                 {artistDetailTab === 'tracks' &&
-                  artistItems.map((item) => (
-                    <article key={item.id} className="artist-tracks-panel">
-                      <div className="artist-tracks-release">
-                        <img src={item.image} alt={item.title} className="artist-tracks-release-cover" />
-                        <div className="artist-tracks-release-copy">
-                          <h4>{item.title}</h4>
-                          <p>{item.subtitle}</p>
-                        </div>
-                        <button type="button" className="artist-tracks-return" aria-label="Voltar">
-                          ↩
-                        </button>
-                      </div>
+                  (() => {
+                    const fallbackRelease = artistItems[0] || null;
+                    const release = artistTracksState.album || fallbackRelease;
+                    const tracksToRender = artistTracksState.tracks?.length ? artistTracksState.tracks : fallbackRelease?.tracks || [];
 
-                      <div className="artist-tracks-list">
-                        {Array.isArray(item.tracks) &&
-                          item.tracks.map((track) => (
+                    return (
+                      <article key={release?.title || selectedArtistDetail?.id} className="artist-tracks-panel">
+                        <div className="artist-tracks-release">
+                          <img src={release?.image} alt={release?.title} className="artist-tracks-release-cover" />
+                          <div className="artist-tracks-release-copy">
+                            <h4>{release?.title || 'Faixas do artista'}</h4>
+                            <p>{release?.subtitle || ''}</p>
+                          </div>
+                          <button type="button" className="artist-tracks-return" aria-label="Voltar">
+                            ↩
+                          </button>
+                        </div>
+
+                        <div className="artist-tracks-list">
+                          {artistTracksState.status === 'loading' && <p className="artist-tracks-loading">Carregando faixas do Spotify...</p>}
+
+                          {tracksToRender.map((track) =>
+                            track.spotifyUrl ? (
+                              <a
+                                key={track.id}
+                                className="artist-track-row artist-track-link-row"
+                                href={track.spotifyUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                <span className={track.active ? 'artist-track-play active' : 'artist-track-play'} aria-hidden="true">
+                                  <Play size={16} fill="currentColor" />
+                                </span>
+                                <div className="artist-track-copy">
+                                  <h5>{track.title}</h5>
+                                  <p>{track.subtitle || track.artists}</p>
+                                </div>
+                                <div className="artist-track-metrics">
+                                  <span className="artist-track-listeners">
+                                    <i />
+                                    {track.listeners || 'Spotify'}
+                                  </span>
+                                  <span className="artist-track-duration">{track.duration}</span>
+                                </div>
+                              </a>
+                            ) : (
                             <div key={track.id} className="artist-track-row">
-                              <button type="button" className={track.active ? 'artist-track-play active' : 'artist-track-play'} aria-label={`Tocar ${track.title}`}>
+                              <span className={track.active ? 'artist-track-play active' : 'artist-track-play'} aria-hidden="true">
                                 <Play size={16} fill="currentColor" />
-                              </button>
+                              </span>
                               <div className="artist-track-copy">
                                 <h5>{track.title}</h5>
-                                <p>{track.subtitle}</p>
+                                <p>{track.subtitle || track.artists}</p>
                               </div>
                               <div className="artist-track-metrics">
                                 <span className="artist-track-listeners">
                                   <i />
-                                  {track.listeners}
+                                  {track.listeners || 'Spotify'}
                                 </span>
                                 <span className="artist-track-duration">{track.duration}</span>
                               </div>
                             </div>
                           ))}
-                      </div>
-                    </article>
-                  ))}
+                        </div>
+                      </article>
+                    );
+                  })()}
               </div>
             </div>
           </article>

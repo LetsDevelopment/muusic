@@ -91,9 +91,77 @@ export function createSpotifyApiService({ spotifyClientId, spotifyClientSecret, 
     }
   }
 
+  async function fetchSpotifyArtist(accessToken, artistId) {
+    if (!artistId) return null;
+    try {
+      const response = await axios.get(`https://api.spotify.com/v1/artists/${artistId}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        validateStatus: () => true
+      });
+      if (response.status >= 400) return null;
+      return response.data || null;
+    } catch {
+      return null;
+    }
+  }
+
+  async function searchSpotifyArtist(accessToken, artistName) {
+    const query = String(artistName || '').trim();
+    if (!query) return null;
+    try {
+      const response = await axios.get('https://api.spotify.com/v1/search', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        params: {
+          q: query,
+          type: 'artist',
+          limit: 1
+        },
+        validateStatus: () => true
+      });
+      if (response.status >= 400) return null;
+      return response.data?.artists?.items?.[0] || null;
+    } catch {
+      return null;
+    }
+  }
+
+  async function fetchSpotifyAlbumTracks(accessToken, albumId) {
+    if (!albumId) return null;
+    try {
+      const response = await axios.get(`https://api.spotify.com/v1/albums/${albumId}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        params: { market: 'BR' },
+        validateStatus: () => true
+      });
+      if (response.status >= 400) return null;
+      return response.data || null;
+    } catch {
+      return null;
+    }
+  }
+
+  async function fetchSpotifyArtistTopTracks(accessToken, artistId) {
+    if (!artistId) return [];
+    try {
+      const response = await axios.get(`https://api.spotify.com/v1/artists/${artistId}/top-tracks`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        params: { market: 'BR' },
+        validateStatus: () => true
+      });
+      if (response.status >= 400) return [];
+      return Array.isArray(response.data?.tracks) ? response.data.tracks : [];
+    } catch {
+      return [];
+    }
+  }
+
   return {
     fetchSpotifyNowPlaying,
     refreshSpotifyAccessToken,
-    buildSpotifyBasicHeader
+    buildSpotifyBasicHeader,
+    fetchSpotifyArtist,
+    searchSpotifyArtist,
+    fetchSpotifyAlbumTracks,
+    fetchSpotifyArtistTopTracks
   };
 }

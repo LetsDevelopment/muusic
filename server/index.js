@@ -241,10 +241,11 @@ const { readAuthSession, requireAdmin } = createLocalAuth({
   userService,
   sanitizeRole
 });
-const { fetchSpotifyNowPlaying, refreshSpotifyAccessToken, buildSpotifyBasicHeader } = createSpotifyApiService({
+const { fetchSpotifyNowPlaying, refreshSpotifyAccessToken, buildSpotifyBasicHeader, fetchSpotifyArtist, searchSpotifyArtist, fetchSpotifyAlbumTracks, fetchSpotifyArtistTopTracks } =
+  createSpotifyApiService({
   spotifyClientId: process.env.SPOTIFY_CLIENT_ID || '',
   spotifyClientSecret: process.env.SPOTIFY_CLIENT_SECRET || ''
-});
+  });
 trendingPlaybackService.startBackgroundWorker({
   flushIntervalMs: Number(process.env.TRENDINGS_FLUSH_INTERVAL_MS || 8000),
   maxBatchSize: Number(process.env.TRENDINGS_BATCH_SIZE || 200)
@@ -332,6 +333,10 @@ app.use(
     fetchSpotifyNowPlaying,
     refreshSpotifyAccessToken,
     buildSpotifyBasicHeader,
+    fetchSpotifyArtist,
+    searchSpotifyArtist,
+    fetchSpotifyAlbumTracks,
+    fetchSpotifyArtistTopTracks,
     cleanupSpotifyExchangeCodes,
     spotifyExchangeCodes,
     spotifyExchangeTtlMs: SPOTIFY_EXCHANGE_TTL_MS
