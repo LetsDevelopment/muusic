@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ChevronLeft, ChevronRight, Heart, MessageCircle, Search, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Heart, MessageCircle, Play, Search, X } from 'lucide-react';
 import { API_URL } from '../config/appConfig';
 import BuzzCommunitiesPanel from './BuzzCommunitiesPanel';
 import UserProfile from './user-profile/UserProfile';
@@ -670,16 +670,87 @@ export default function RealFeedLite({
               </div>
 
               <div className="artist-detail-grid">
-                {artistItems.map((item) => (
-                  <article key={item.id} className="artist-detail-item">
-                    <img src={item.image} alt={item.title} className="artist-detail-item-cover" />
-                    <div className="artist-detail-item-copy">
-                      <h4>{item.title}</h4>
-                      <p className="artist-detail-item-subtitle">{item.subtitle}</p>
-                      <p className="artist-detail-item-meta">{item.meta}</p>
-                    </div>
-                  </article>
-                ))}
+                {artistDetailTab === 'albums' &&
+                  artistItems.map((item) => (
+                    <article key={item.id} className="artist-detail-item">
+                      <img src={item.image} alt={item.title} className="artist-detail-item-cover" />
+                      <div className="artist-detail-item-copy">
+                        <h4>{item.title}</h4>
+                        <p className="artist-detail-item-subtitle">{item.subtitle}</p>
+                        <p className="artist-detail-item-meta">{item.meta}</p>
+                      </div>
+                    </article>
+                  ))}
+
+                {artistDetailTab === 'singles' && (
+                  <div className="artist-singles-list">
+                    {artistItems.map((item) => (
+                      <article key={item.id} className="artist-single-row">
+                        <img src={item.image} alt={item.title} className="artist-single-cover" />
+                        <div className="artist-single-copy">
+                          <h4>{item.title}</h4>
+                          <p>{item.subtitle}</p>
+                        </div>
+                        <span className="artist-single-duration">{item.meta}</span>
+                      </article>
+                    ))}
+                  </div>
+                )}
+
+                {artistDetailTab === 'shows' && (
+                  <div className="artist-shows-list">
+                    {artistItems.map((item) => (
+                      <article key={item.id} className="artist-show-row">
+                        <div className="artist-show-date">{item.meta}</div>
+                        <div className="artist-show-copy">
+                          <h4>{item.title}</h4>
+                          <p>{item.subtitle}</p>
+                        </div>
+                        <button type="button" className="artist-show-cta">
+                          {item.cta || 'Ingressos'}
+                        </button>
+                      </article>
+                    ))}
+                  </div>
+                )}
+
+                {artistDetailTab === 'tracks' &&
+                  artistItems.map((item) => (
+                    <article key={item.id} className="artist-tracks-panel">
+                      <div className="artist-tracks-release">
+                        <img src={item.image} alt={item.title} className="artist-tracks-release-cover" />
+                        <div className="artist-tracks-release-copy">
+                          <h4>{item.title}</h4>
+                          <p>{item.subtitle}</p>
+                        </div>
+                        <button type="button" className="artist-tracks-return" aria-label="Voltar">
+                          ↩
+                        </button>
+                      </div>
+
+                      <div className="artist-tracks-list">
+                        {Array.isArray(item.tracks) &&
+                          item.tracks.map((track) => (
+                            <div key={track.id} className="artist-track-row">
+                              <button type="button" className={track.active ? 'artist-track-play active' : 'artist-track-play'} aria-label={`Tocar ${track.title}`}>
+                                <Play size={16} fill="currentColor" />
+                              </button>
+                              <div className="artist-track-copy">
+                                <h5>{track.title}</h5>
+                                <p>{track.subtitle}</p>
+                              </div>
+                              <div className="artist-track-metrics">
+                                <span className="artist-track-listeners">
+                                  <i />
+                                  {track.listeners}
+                                </span>
+                                <span className="artist-track-duration">{track.duration}</span>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    </article>
+                  ))}
               </div>
             </div>
           </article>

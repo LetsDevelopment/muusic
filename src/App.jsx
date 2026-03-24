@@ -84,22 +84,33 @@ function buildArtistSections(name) {
       { id: `${baseKey}-album-4`, title: 'Estrada e Coração', subtitle: 'Sessão especial', meta: '2023', image: 'https://picsum.photos/seed/artist-album-4/520/520' }
     ],
     tracks: [
-      { id: `${baseKey}-track-1`, title: 'Solteiro Forçado', subtitle: safeName, meta: '3:01', image: 'https://picsum.photos/seed/artist-track-1/520/520' },
-      { id: `${baseKey}-track-2`, title: 'Minha Herança', subtitle: safeName, meta: '2:54', image: 'https://picsum.photos/seed/artist-track-2/520/520' },
-      { id: `${baseKey}-track-3`, title: 'Tô Voltando', subtitle: safeName, meta: '3:18', image: 'https://picsum.photos/seed/artist-track-3/520/520' },
-      { id: `${baseKey}-track-4`, title: 'Rodeio em Mim', subtitle: safeName, meta: '2:47', image: 'https://picsum.photos/seed/artist-track-4/520/520' }
+      {
+        id: `${baseKey}-tracks-release`,
+        title: 'Lets Go Rodeo',
+        subtitle: '2025',
+        meta: 'EP',
+        image: 'https://picsum.photos/seed/artist-album-2/520/520',
+        tracks: [
+          { id: `${baseKey}-track-1`, title: 'Olha Onde Eu Tô', subtitle: safeName, listeners: '356', duration: '3:01', active: true },
+          { id: `${baseKey}-track-2`, title: 'Tropa do Chapelão', subtitle: `${safeName}, Diplo`, listeners: '356', duration: '2:22' },
+          { id: `${baseKey}-track-3`, title: 'Se Amando nas BR', subtitle: safeName, listeners: '87', duration: '2:03' },
+          { id: `${baseKey}-track-4`, title: 'Rodeo no Texas', subtitle: safeName, listeners: '87', duration: '2:31' }
+        ]
+      }
     ],
     singles: [
-      { id: `${baseKey}-single-1`, title: 'Coração Sertanejo', subtitle: 'Single', meta: '2025', image: 'https://picsum.photos/seed/artist-single-1/520/520' },
-      { id: `${baseKey}-single-2`, title: 'Mapa do Amor', subtitle: 'Single', meta: '2024', image: 'https://picsum.photos/seed/artist-single-2/520/520' },
-      { id: `${baseKey}-single-3`, title: 'Noite no Interior', subtitle: 'Single', meta: '2024', image: 'https://picsum.photos/seed/artist-single-3/520/520' },
-      { id: `${baseKey}-single-4`, title: 'Cavalo de Fogo', subtitle: 'Single', meta: '2023', image: 'https://picsum.photos/seed/artist-single-4/520/520' }
+      { id: `${baseKey}-single-1`, title: 'Processo Delicado', subtitle: `${safeName}, Hugo Henrique`, meta: '1:55', image: 'https://picsum.photos/seed/artist-single-1/520/520' },
+      { id: `${baseKey}-single-2`, title: 'Era Só Que Me Faltava', subtitle: `${safeName}, CountryBeat`, meta: '1:55', image: 'https://picsum.photos/seed/artist-single-2/520/520' },
+      { id: `${baseKey}-single-3`, title: 'La Plata', subtitle: `${safeName}, Léo e Raphael`, meta: '1:55', image: 'https://picsum.photos/seed/artist-single-3/520/520' },
+      { id: `${baseKey}-single-4`, title: 'Sua Boca Mente (You’re Still The One)', subtitle: `${safeName}, Zé Felipe`, meta: '3:14', image: 'https://picsum.photos/seed/artist-single-4/520/520' },
+      { id: `${baseKey}-single-5`, title: 'Quem Que Tá', subtitle: `${safeName}, CountryBeat`, meta: '2:32', image: 'https://picsum.photos/seed/artist-single-5/520/520' }
     ],
     shows: [
-      { id: `${baseKey}-show-1`, title: 'Arena Goiânia', subtitle: 'Goiânia, Brasil', meta: '28 mar', image: 'https://picsum.photos/seed/artist-show-1/520/520' },
-      { id: `${baseKey}-show-2`, title: 'Villa Country', subtitle: 'São Paulo, Brasil', meta: '04 abr', image: 'https://picsum.photos/seed/artist-show-2/520/520' },
-      { id: `${baseKey}-show-3`, title: 'Espaço Hall', subtitle: 'Rio de Janeiro, Brasil', meta: '11 abr', image: 'https://picsum.photos/seed/artist-show-3/520/520' },
-      { id: `${baseKey}-show-4`, title: 'Mineirão Sessions', subtitle: 'Belo Horizonte, Brasil', meta: '18 abr', image: 'https://picsum.photos/seed/artist-show-4/520/520' }
+      { id: `${baseKey}-show-1`, title: 'São José do Rio Pardo (SP)', subtitle: 'Rio Expo Music', meta: '4 de Abril', cta: 'Ingressos' },
+      { id: `${baseKey}-show-2`, title: 'Mococa (SP)', subtitle: '48ª Expoam', meta: '4 de Abril', cta: 'Ingressos' },
+      { id: `${baseKey}-show-3`, title: 'Araxá (MG)', subtitle: 'Araxá Rodeio Show', meta: '18 de Abril', cta: 'Ingressos' },
+      { id: `${baseKey}-show-4`, title: 'Uberaba (MG)', subtitle: 'Expozebu Rodeio Show', meta: '24 de Abril', cta: 'Ingressos' },
+      { id: `${baseKey}-show-5`, title: 'Pitanga (PR)', subtitle: 'Fest Centro', meta: '27 de Julho', cta: 'Ingressos' }
     ]
   };
 }
