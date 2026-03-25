@@ -26,13 +26,26 @@ export function createAdminRouter({
       if (!auth) return undefined;
       const { page, limit, search } = parseListQuery(req.query || {});
       const result = await userService.listUsers({ page, limit, search });
+      const musicSnapshots = await userService.getAdminMusicSnapshotByUserIds(
+        result.items.map((user) => user.id),
+        { historyLimit: 20, recentLimit: 6 }
+      );
       return res.json({
         users: result.items.map((user) => ({
           id: user.id,
           name: user.name || user.username || 'Usuario',
           email: user.email,
           role: sanitizeRole(user.role),
-          createdAt: user.createdAt || null
+          createdAt: user.createdAt || null,
+          music: musicSnapshots.get(user.id) || {
+            spotifyId: user.spotifyId || null,
+            spotifyBridgeConnectedAt: user.spotifyBridgeConnectedAt || null,
+            nowPlaying: null,
+            recentTracks: [],
+            musicHistory: [],
+            historyCount: 0,
+            bridgeDevices: []
+          }
         })),
         pagination: {
           page: result.page,

@@ -69,6 +69,35 @@ function mapMusicHistoryEntry(entry, index = 0) {
   };
 }
 
+function formatBridgeDeviceSession(session) {
+  if (!session) return null;
+  return {
+    id: session.id,
+    deviceName: session.deviceName || 'Dispositivo sem nome',
+    platform: session.platform || null,
+    createdAt: session.createdAt ? new Date(session.createdAt).toISOString() : null,
+    lastSeenAt: session.lastSeenAt ? new Date(session.lastSeenAt).toISOString() : null,
+    revokedAt: session.revokedAt ? new Date(session.revokedAt).toISOString() : null
+  };
+}
+
+function formatNowPlayingSnapshot(entry) {
+  if (!entry) return null;
+  return {
+    trackId: entry.spotifyTrackId || null,
+    trackName: entry.trackName || '',
+    artistName: entry.artistName || '',
+    albumImageUrl: entry.albumImageUrl || null,
+    source: entry.source || 'spotify',
+    bridgeMode: entry.bridgeMode || null,
+    externalUrl: entry.externalUrl || null,
+    latitude: typeof entry.latitude === 'number' ? entry.latitude : null,
+    longitude: typeof entry.longitude === 'number' ? entry.longitude : null,
+    startedAt: entry.startedAt ? new Date(entry.startedAt).toISOString() : null,
+    expiresAt: entry.expiresAt ? new Date(entry.expiresAt).toISOString() : null
+  };
+}
+
 function buildMusicProfileFromEntries(entries = [], recentLimit = 6) {
   const musicHistory = entries.map((entry, index) => mapMusicHistoryEntry(entry, index));
   const recentTracks = entries
@@ -574,6 +603,112 @@ class UserService {
           .slice(0, limit)
       : [];
     return buildMusicProfileFromEntries(rows, recentLimit);
+  }
+
+  async getAdminMusicSnapshotByUserIds(userIds = [], { historyLimit = 20, recentLimit = 6 } = {}) {
+    const ids = Array.from(new Set((Array.isArray(userIds) ? userIds : []).map((value) => String(value || '').trim()).filter(Boolean)));
+    if (ids.length === 0) return new Map();
+
+    const prismaClient = await getPrisma();
+    if (prismaClient) {
+      const [users, nowPlayingRows, historyRows, deviceRows, historyCounts] = await Promise.all([
+        prismaClient.user.findMany({
+          where: { id: { in: ids } },
+          select: {
+            id: true,
+            spotifyId: true,
+            spotifyBridgeConnectedAt: true
+          }
+        }),
+        prismaClient.nowPlaying.findMany({
+          where: { userId: { in: ids } }
+        }),
+        prismaClient.userMusicHistory.findMany({
+          where: { userId: { in: ids } },
+          orderBy: { playedAt: 'desc' }
+        }),
+        prismaClient.bridgeDeviceSession.findMany({
+          where: {
+            userId: { in: ids },
+            revokedAt: null
+          },
+          orderBy: { lastSeenAt: 'desc' }
+        }),
+        prismaClient.userMusicHistory.groupBy({
+          by: ['userId'],
+          where: { userId: { in: ids } },
+          _count: {
+            _all: true
+          }
+        })
+      ]);
+
+      const usersById = new Map(users.map((user) => [user.id, user]));
+      const nowPlayingByUserId = new Map(nowPlayingRows.map((row) => [row.userId, row]));
+      const historyByUserId = new Map();
+      for (const row of historyRows) {
+        const bucket = historyByUserId.get(row.userId) || [];
+        if (bucket.length < historyLimit) bucket.push(row);
+        historyByUserId.set(row.userId, bucket);
+      }
+      const devicesByUserId = new Map();
+      for (const row of deviceRows) {
+        const bucket = devicesByUserId.get(row.userId) || [];
+        bucket.push(formatBridgeDeviceSession(row));
+        devicesByUserId.set(row.userId, bucket);
+      }
+      const historyCountByUserId = new Map(historyCounts.map((row) => [row.userId, row._count?._all || 0]));
+
+      return new Map(
+        ids.map((id) => {
+          const user = usersById.get(id);
+          const history = historyByUserId.get(id) || [];
+          const profile = buildMusicProfileFromEntries(history, recentLimit);
+          return [
+            id,
+            {
+              spotifyId: user?.spotifyId || null,
+              spotifyBridgeConnectedAt: user?.spotifyBridgeConnectedAt
+                ? new Date(user.spotifyBridgeConnectedAt).toISOString()
+                : null,
+              nowPlaying: formatNowPlayingSnapshot(nowPlayingByUserId.get(id) || null),
+              recentTracks: profile.recentTracks,
+              musicHistory: profile.musicHistory,
+              historyCount: historyCountByUserId.get(id) || 0,
+              bridgeDevices: devicesByUserId.get(id) || []
+            }
+          ];
+        })
+      );
+    }
+
+    const users = await this.readJSON();
+    const usersById = new Map(users.map((user) => [user.id, user]));
+    return new Map(
+      ids.map((id) => {
+        const user = usersById.get(id);
+        const historyRows = Array.isArray(user?.musicHistory)
+          ? user.musicHistory
+              .slice()
+              .sort((a, b) => String(b.playedAt || '').localeCompare(String(a.playedAt || '')))
+              .slice(0, historyLimit)
+          : [];
+        const fullHistoryCount = Array.isArray(user?.musicHistory) ? user.musicHistory.length : 0;
+        const profile = buildMusicProfileFromEntries(historyRows, recentLimit);
+        return [
+          id,
+          {
+            spotifyId: user?.spotifyId || null,
+            spotifyBridgeConnectedAt: user?.spotifyBridgeConnectedAt || null,
+            nowPlaying: formatNowPlayingSnapshot(user?.nowPlayingRecord || null),
+            recentTracks: profile.recentTracks,
+            musicHistory: profile.musicHistory,
+            historyCount: fullHistoryCount,
+            bridgeDevices: []
+          }
+        ];
+      })
+    );
   }
 
   async upsertNowPlayingForUser({ userId, trackId, trackName, artistName, albumImageUrl, source, bridgeMode, externalUrl, latitude = null, longitude = null }) {
