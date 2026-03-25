@@ -478,7 +478,10 @@ export default function App() {
 
     const schedule = (delay) => {
       timerId = window.setTimeout(async () => {
-        const nowPlaying = await refreshSpotifyNowPlaying();
+        let nowPlaying = await refreshSpotifyNowPlaying();
+        if (!nowPlaying && activeUser?.token && activeUser.token !== 'guest-local') {
+          nowPlaying = await refreshBridgeNowPlaying();
+        }
         if (cancelled) return;
         if (joined && socketRef.current) {
           socketRef.current.emit('playback:update', {
@@ -490,7 +493,11 @@ export default function App() {
     };
 
     refreshSpotifyNowPlaying()
-      .then((nowPlaying) => {
+      .then(async (spotifyNowPlaying) => {
+        let nowPlaying = spotifyNowPlaying;
+        if (!nowPlaying && activeUser?.token && activeUser.token !== 'guest-local') {
+          nowPlaying = await refreshBridgeNowPlaying();
+        }
         if (!cancelled) {
           if (joined && socketRef.current) {
             socketRef.current.emit('playback:update', {
@@ -510,7 +517,7 @@ export default function App() {
       cancelled = true;
       if (timerId) window.clearTimeout(timerId);
     };
-  }, [activeUser?.spotifyToken, refreshSpotifyNowPlaying, joined, socketRef]);
+  }, [activeUser?.spotifyToken, activeUser?.token, refreshSpotifyNowPlaying, refreshBridgeNowPlaying, joined, socketRef]);
 
   useEffect(() => {
     if (!activeUser?.token || activeUser.token === 'guest-local') return undefined;

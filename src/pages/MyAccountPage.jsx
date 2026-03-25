@@ -3,7 +3,7 @@ import { ArrowLeft, Upload, UserRound, X } from 'lucide-react';
 import { accountService } from '../services/accountService';
 import SpotifyBridgeSetup from '../components/SpotifyBridgeSetup';
 
-const TAB_KEYS = ['perfil', 'seguranca'];
+const TAB_KEYS = ['perfil', 'historico', 'seguranca'];
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ACCEPTED_MIME = ['image/png', 'image/jpeg', 'image/webp'];
 
@@ -18,6 +18,13 @@ function fileToDataUrl(file) {
 
 function countBio(value) {
   return String(value || '').length;
+}
+
+function getHistorySourceLabel(item) {
+  if (item?.source === 'bridge') {
+    return item?.bridgeMode === 'desktop' ? 'App instalado' : 'Navegador';
+  }
+  return 'Spotify';
 }
 
 export default function MyAccountPage({ authUser, onBack, onSettingsChange, onLogout, onNowPlayingUpdate }) {
@@ -50,6 +57,8 @@ export default function MyAccountPage({ authUser, onBack, onSettingsChange, onLo
   const fileInputRef = useRef(null);
   const tabRefs = useRef([]);
   const cardRef = useRef(null);
+  const musicHistory = Array.isArray(authUser?.musicHistory) ? authUser.musicHistory : [];
+  const recentTracks = Array.isArray(authUser?.recentTracks) ? authUser.recentTracks : [];
 
   useEffect(() => {
     const onKeyDown = (event) => {
@@ -304,6 +313,20 @@ export default function MyAccountPage({ authUser, onBack, onSettingsChange, onLo
             }}
             type="button"
             role="tab"
+            aria-selected={activeTab === 'historico'}
+            aria-controls="tab-panel-historico"
+            id="tab-historico"
+            className={activeTab === 'historico' ? 'account-tab active' : 'account-tab'}
+            onClick={() => setActiveTab('historico')}
+          >
+            Histórico musical
+          </button>
+          <button
+            ref={(node) => {
+              tabRefs.current[2] = node;
+            }}
+            type="button"
+            role="tab"
             aria-selected={activeTab === 'seguranca'}
             aria-controls="tab-panel-seguranca"
             id="tab-seguranca"
@@ -373,6 +396,55 @@ export default function MyAccountPage({ authUser, onBack, onSettingsChange, onLo
               initialConnectedAt={authUser?.spotifyBridgeConnectedAt || null}
               onDesktopSyncResult={onNowPlayingUpdate}
             />
+          </div>
+        )}
+
+        {activeTab === 'historico' && (
+          <div id="tab-panel-historico" role="tabpanel" aria-labelledby="tab-historico" className="account-panel">
+            <div className="account-history-head">
+              <div>
+                <h3>Histórico musical</h3>
+                <p>Essas são as músicas detectadas e salvas pelo Muusic na sua conta.</p>
+              </div>
+              {recentTracks.length ? (
+                <div className="account-history-recent">
+                  <span>Recentes</span>
+                  <strong>{recentTracks.join(' • ')}</strong>
+                </div>
+              ) : null}
+            </div>
+
+            {!showMusicHistory ? (
+              <div className="account-history-empty">
+                <p>O histórico musical está oculto nas preferências de segurança.</p>
+              </div>
+            ) : musicHistory.length ? (
+              <div className="account-history-list">
+                {musicHistory.map((item) => (
+                  <article key={item.id} className="account-history-item">
+                    {item.cover ? (
+                      <img src={item.cover} alt={`${item.artist || 'Artista'} - ${item.title || 'Faixa'}`} className="account-history-cover" />
+                    ) : (
+                      <div className="account-history-cover account-history-cover-fallback" aria-hidden="true">
+                        ♪
+                      </div>
+                    )}
+                    <div className="account-history-copy">
+                      <p className="account-history-title">{item.title || 'Faixa desconhecida'}</p>
+                      <p className="account-history-artist">{item.artist || 'Artista não informado'}</p>
+                      <div className="account-history-meta">
+                        <span>{item.date || 'Sem data'}</span>
+                        <span className="account-history-source">{getHistorySourceLabel(item)}</span>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <div className="account-history-empty">
+                <p>Ainda não há músicas registradas no seu histórico.</p>
+              </div>
+            )}
           </div>
         )}
 

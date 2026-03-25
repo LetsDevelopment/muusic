@@ -251,6 +251,20 @@
     flex-direction: column;
   }
 
+  .account-history-head {
+    flex-direction: column;
+  }
+
+  .account-history-item {
+    grid-template-columns: 56px minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .account-history-cover {
+    width: 56px;
+    height: 56px;
+  }
+
   .account-logout-btn {
     margin-left: 0;
   }

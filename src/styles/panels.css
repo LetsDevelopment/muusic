@@ -3133,6 +3133,139 @@
   color: rgba(201, 213, 228, 0.82);
 }
 
+.account-history-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.account-history-head h3 {
+  margin: 0;
+  color: #f4f6fb;
+  font-size: 18px;
+}
+
+.account-history-head p {
+  margin: 6px 0 0;
+  color: #a5b0c0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.account-history-recent {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.account-history-recent span {
+  color: #92a0b5;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.account-history-recent strong {
+  color: #eef2f8;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.account-history-list {
+  display: grid;
+  gap: 12px;
+}
+
+.account-history-item {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  padding: 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.account-history-cover {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  object-fit: cover;
+  display: block;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.account-history-cover-fallback {
+  display: grid;
+  place-items: center;
+  color: #9fb0c9;
+  font-size: 22px;
+}
+
+.account-history-copy {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.account-history-title,
+.account-history-artist,
+.account-history-meta {
+  margin: 0;
+}
+
+.account-history-title {
+  color: #f3f6fb;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.account-history-artist {
+  color: #bcc7d8;
+  font-size: 13px;
+}
+
+.account-history-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  color: #93a0b2;
+  font-size: 12px;
+}
+
+.account-history-source {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: rgba(29, 185, 84, 0.12);
+  color: #d3ffe2;
+  font-weight: 600;
+}
+
+.account-history-empty {
+  padding: 20px 18px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+}
+
+.account-history-empty p {
+  margin: 0;
+  color: #acb8c9;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .missing-token {
   position: absolute;
   left: 50%;
