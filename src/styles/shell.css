@@ -960,7 +960,8 @@
 }
 
 .now-playing-dock-artist,
-.now-playing-dock-empty {
+.now-playing-dock-empty,
+.now-playing-dock-note {
   margin: 0;
   font-size: 13px;
   line-height: 1.35;
@@ -976,6 +977,13 @@
 
 .now-playing-dock-empty {
   max-width: 22ch;
+}
+
+.now-playing-dock-note {
+  font-size: 11px;
+  line-height: 1.45;
+  color: rgba(183, 198, 216, 0.76);
+  max-width: 24ch;
 }
 
 .now-playing-dock-artist-button {

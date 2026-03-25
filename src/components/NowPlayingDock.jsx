@@ -44,6 +44,9 @@ function NowPlayingDock({
               >
                 {artistName}
               </button>
+              <p className="now-playing-dock-note">
+                Dados sendo lidos sem login do Spotify, somente do navegador.
+              </p>
             </div>
           </div>
         ) : (
