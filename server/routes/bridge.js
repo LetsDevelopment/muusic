@@ -5,8 +5,12 @@ const FALLBACK_BRIDGE_STORE = new Map();
 const BRIDGE_TTL_SECONDS = 45;
 const BRIDGE_STALE_MS = 30_000;
 
-function bridgeRedisKey(userId) {
-  return `bridge:now-playing:${userId}`;
+function normalizeBridgeMode(value) {
+  return value === 'desktop' ? 'desktop' : 'browser';
+}
+
+function bridgeRedisKey(userId, mode = 'browser') {
+  return `bridge:now-playing:${userId}:${normalizeBridgeMode(mode)}`;
 }
 
 function buildApiBaseUrl(req, fallbackUrl = '') {
@@ -82,27 +86,45 @@ function normalizeBridgeNowPlaying(payload = {}) {
 async function writeBridgeNowPlaying(userId, nowPlaying) {
   const updatedAt = Date.now();
   const payload = { nowPlaying, updatedAt };
+  const mode = normalizeBridgeMode(nowPlaying?.bridgeMode);
   if (redisService.enabled) {
-    await redisService.set(bridgeRedisKey(userId), payload, BRIDGE_TTL_SECONDS);
+    await redisService.set(bridgeRedisKey(userId, mode), payload, BRIDGE_TTL_SECONDS);
     return payload;
   }
-  FALLBACK_BRIDGE_STORE.set(String(userId), payload);
+  FALLBACK_BRIDGE_STORE.set(`${String(userId)}:${mode}`, payload);
   return payload;
 }
 
-async function readBridgeNowPlaying(userId) {
+async function readBridgeNowPlaying(userId, mode = 'browser') {
+  const resolvedMode = normalizeBridgeMode(mode);
   if (redisService.enabled) {
-    return redisService.get(bridgeRedisKey(userId));
+    return redisService.get(bridgeRedisKey(userId, resolvedMode));
   }
-  return FALLBACK_BRIDGE_STORE.get(String(userId)) || null;
+  return FALLBACK_BRIDGE_STORE.get(`${String(userId)}:${resolvedMode}`) || null;
 }
 
-async function clearBridgeNowPlaying(userId) {
+async function clearBridgeNowPlaying(userId, mode = 'browser') {
+  const resolvedMode = normalizeBridgeMode(mode);
   if (redisService.enabled) {
-    await redisService.delete(bridgeRedisKey(userId));
+    await redisService.delete(bridgeRedisKey(userId, resolvedMode));
     return;
   }
-  FALLBACK_BRIDGE_STORE.delete(String(userId));
+  FALLBACK_BRIDGE_STORE.delete(`${String(userId)}:${resolvedMode}`);
+}
+
+function isFreshBridgeEntry(entry) {
+  return Boolean(entry && Date.now() - Number(entry.updatedAt || 0) <= BRIDGE_STALE_MS);
+}
+
+async function readPreferredBridgeNowPlaying(userId) {
+  const [desktopEntry, browserEntry] = await Promise.all([
+    readBridgeNowPlaying(userId, 'desktop'),
+    readBridgeNowPlaying(userId, 'browser')
+  ]);
+
+  if (isFreshBridgeEntry(desktopEntry)) return desktopEntry;
+  if (isFreshBridgeEntry(browserEntry)) return browserEntry;
+  return null;
 }
 
 export function createBridgeRouter({ readAuthSession, userService, frontendUrl }) {
@@ -163,7 +185,7 @@ export function createBridgeRouter({ readAuthSession, userService, frontendUrl }
 
     const nowPlaying = normalizeBridgeNowPlaying(req.body || {});
     if (!nowPlaying) {
-      await clearBridgeNowPlaying(userId);
+      await clearBridgeNowPlaying(userId, 'browser');
       return res.json({ ok: true, nowPlaying: null });
     }
 
@@ -182,8 +204,8 @@ export function createBridgeRouter({ readAuthSession, userService, frontendUrl }
     const auth = await readAuthSession(req);
     if (auth.error) return res.status(401).json({ error: auth.error });
 
-    const entry = await readBridgeNowPlaying(auth.user.id);
-    if (!entry || Date.now() - Number(entry.updatedAt || 0) > BRIDGE_STALE_MS) {
+    const entry = await readPreferredBridgeNowPlaying(auth.user.id);
+    if (!entry) {
       return res.json({ nowPlaying: null });
     }
 
@@ -257,7 +279,7 @@ export function createBridgeRouter({ readAuthSession, userService, frontendUrl }
       bridgeMode: 'desktop'
     });
     if (!nowPlaying) {
-      await clearBridgeNowPlaying(session.userId);
+      await clearBridgeNowPlaying(session.userId, 'desktop');
       return res.json({ ok: true, nowPlaying: null });
     }
 
