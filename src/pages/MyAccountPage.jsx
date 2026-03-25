@@ -20,7 +20,7 @@ function countBio(value) {
   return String(value || '').length;
 }
 
-export default function MyAccountPage({ authUser, onBack, onSettingsChange, onLogout }) {
+export default function MyAccountPage({ authUser, onBack, onSettingsChange, onLogout, onNowPlayingUpdate }) {
   const authUserId = authUser?.id || '';
   const authUserToken = authUser?.token || '';
   const authUserSessionId = authUser?.sessionId || '';
@@ -371,6 +371,7 @@ export default function MyAccountPage({ authUser, onBack, onSettingsChange, onLo
             <SpotifyBridgeSetup
               authPayload={authPayload}
               initialConnectedAt={authUser?.spotifyBridgeConnectedAt || null}
+              onDesktopSyncResult={onNowPlayingUpdate}
             />
           </div>
         )}

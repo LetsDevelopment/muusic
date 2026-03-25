@@ -7,9 +7,17 @@ function NowPlayingDock({
   fallbackImage,
   useMarqueeTitle,
   isMobileDevice,
-  onArtistClick
+  onArtistClick,
+  source,
+  bridgeMode
 }) {
   const imageSrc = coverImage || fallbackImage || null;
+  const bridgeNote =
+    source === 'bridge'
+      ? bridgeMode === 'desktop'
+        ? 'Dados sendo lidos do aplicativo Spotify instalado neste computador.'
+        : 'Dados sendo lidos sem login do Spotify, somente do navegador.'
+      : '';
 
   return (
     <aside className="now-playing-dock" aria-live="polite">
@@ -44,9 +52,7 @@ function NowPlayingDock({
               >
                 {artistName}
               </button>
-              <p className="now-playing-dock-note">
-                Dados sendo lidos sem login do Spotify, somente do navegador.
-              </p>
+              {bridgeNote ? <p className="now-playing-dock-note">{bridgeNote}</p> : null}
             </div>
           </div>
         ) : (

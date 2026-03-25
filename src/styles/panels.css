@@ -3104,6 +3104,35 @@
   color: #ffb5c3;
 }
 
+.account-bridge-download {
+  color: #eef2f8;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.account-bridge-desktop {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: grid;
+  gap: 10px;
+}
+
+.account-bridge-desktop h4 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #eef2f8;
+}
+
+.account-bridge-desktop p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(201, 213, 228, 0.82);
+}
+
 .missing-token {
   position: absolute;
   left: 50%;

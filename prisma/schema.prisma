@@ -31,12 +31,29 @@ model User {
   trendings               TrendingPlayback[]
   sessions                Session[]
   resetTokens             PasswordResetToken[]
+  bridgeDevices           BridgeDeviceSession[]
 
   @@index([email])
   @@index([spotifyId])
   @@index([spotifyBridgeConnectedAt])
   @@index([createdAt, id])
   @@index([role, createdAt])
+}
+
+model BridgeDeviceSession {
+  id         String   @id @default(uuid())
+  userId     String
+  deviceName String?
+  platform   String?
+  tokenHash  String   @unique
+  createdAt  DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+  revokedAt  DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
+  @@index([lastSeenAt])
 }
 
 model Show {

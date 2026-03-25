@@ -805,6 +805,14 @@ export default function App() {
           onBack={() => navigateTo('/')}
           onLogout={handleLogout}
           onSettingsChange={setAccountSettings}
+          onNowPlayingUpdate={(nowPlaying) => {
+            setAuthUser((prev) => {
+              if (!prev) return prev;
+              const next = { ...prev, nowPlaying: nowPlaying || null };
+              localStorage.setItem(STORAGE_SESSION_KEY, JSON.stringify(next));
+              return next;
+            });
+          }}
         />
       </div>
     );
@@ -905,6 +913,8 @@ export default function App() {
         fallbackImage={activeUser?.spotify?.image || null}
         useMarqueeTitle={useMarqueeTitle}
         isMobileDevice={isMobileDevice}
+        source={activeUser?.nowPlaying?.source || ''}
+        bridgeMode={activeUser?.nowPlaying?.bridgeMode || ''}
         onArtistClick={() =>
           openArtistDetail({
             artistId: activeUser?.nowPlaying?.artistId,

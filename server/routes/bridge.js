@@ -1,7 +1,6 @@
 import { Router } from 'express';
-import { randomBytes } from 'crypto';
+import { randomBytes, createHash } from 'crypto';
 import redisService from '../services/redis.js';
-
 const FALLBACK_BRIDGE_STORE = new Map();
 const BRIDGE_TTL_SECONDS = 45;
 const BRIDGE_STALE_MS = 30_000;
@@ -44,12 +43,16 @@ function buildBookmarklet(apiBaseUrl, userId, bridgeKey) {
     `}` +
     `fetch(A+'?uid='+encodeURIComponent(U)+'&key='+encodeURIComponent(K),{` +
     `method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({` +
-    `trackName:m.metadata.title||'',artistName:m.metadata.artist||'',albumName:m.metadata.album||'',albumImage:artworkUrl(m),isPlaying:m.playbackState==='playing'` +
+    `trackName:m.metadata.title||'',artistName:m.metadata.artist||'',albumName:m.metadata.album||'',albumImage:artworkUrl(m),isPlaying:m.playbackState==='playing',bridgeMode:'browser'` +
     `})}).catch(function(){});` +
     `}` +
     `clearInterval(window.__muusicBridge);window.__muusicBridge=setInterval(push,5000);push();console.log('[Muusic] Spotify Web sync ativo');` +
     `})()`
   );
+}
+
+function hashDeviceToken(token) {
+  return createHash('sha256').update(String(token || '')).digest('hex');
 }
 
 function normalizeBridgeNowPlaying(payload = {}) {
@@ -59,6 +62,7 @@ function normalizeBridgeNowPlaying(payload = {}) {
 
   return {
     source: 'bridge',
+    bridgeMode: payload.bridgeMode === 'desktop' ? 'desktop' : 'browser',
     trackId: null,
     artistId: null,
     trackName,
@@ -187,6 +191,79 @@ export function createBridgeRouter({ readAuthSession, userService, frontendUrl }
       nowPlaying: entry.nowPlaying || null,
       updatedAt: entry.updatedAt || null
     });
+  });
+
+  router.post('/api/bridge/device/session', async (req, res) => {
+    const auth = await readAuthSession(req);
+    if (auth.error) return res.status(401).json({ error: auth.error });
+
+    const deviceToken = randomBytes(32).toString('hex');
+    const session = await userService.createBridgeDeviceSession({
+      userId: auth.user.id,
+      deviceName: req.body?.deviceName || 'Muusic Bridge Mac',
+      platform: req.body?.platform || 'macos',
+      tokenHash: hashDeviceToken(deviceToken)
+    });
+
+    return res.json({
+      deviceId: session.id,
+      deviceToken,
+      deviceName: session.deviceName || 'Muusic Bridge Mac',
+      platform: session.platform || 'macos'
+    });
+  });
+
+  router.get('/api/bridge/device/status', async (req, res) => {
+    const auth = await readAuthSession(req);
+    if (auth.error) return res.status(401).json({ error: auth.error });
+
+    const sessions = await userService.listBridgeDeviceSessionsByUserId(auth.user.id);
+    return res.json({
+      devices: sessions.map((item) => ({
+        id: item.id,
+        deviceName: item.deviceName || 'Muusic Bridge Mac',
+        platform: item.platform || 'macos',
+        createdAt: item.createdAt,
+        lastSeenAt: item.lastSeenAt
+      }))
+    });
+  });
+
+  router.post('/api/bridge/device/revoke', async (req, res) => {
+    const auth = await readAuthSession(req);
+    if (auth.error) return res.status(401).json({ error: auth.error });
+
+    const deviceId = String(req.body?.deviceId || '').trim();
+    if (!deviceId) return res.status(400).json({ error: 'Missing deviceId' });
+
+    await userService.revokeBridgeDeviceSession({ id: deviceId, userId: auth.user.id });
+    return res.json({ ok: true });
+  });
+
+  router.post('/api/bridge/device-push', async (req, res) => {
+    const authHeader = String(req.headers.authorization || '');
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+    if (!token) {
+      return res.status(401).json({ error: 'Missing device token' });
+    }
+
+    const session = await userService.findBridgeDeviceSessionByTokenHash(hashDeviceToken(token));
+    if (!session?.userId) {
+      return res.status(401).json({ error: 'Invalid device token' });
+    }
+
+    const nowPlaying = normalizeBridgeNowPlaying({
+      ...(req.body || {}),
+      bridgeMode: 'desktop'
+    });
+    if (!nowPlaying) {
+      await clearBridgeNowPlaying(session.userId);
+      return res.json({ ok: true, nowPlaying: null });
+    }
+
+    await writeBridgeNowPlaying(session.userId, nowPlaying);
+    await userService.touchBridgeDeviceSession(session.id);
+    return res.json({ ok: true, nowPlaying });
   });
 
   return router;

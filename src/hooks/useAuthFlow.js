@@ -14,7 +14,8 @@ function isSameNowPlaying(prev, next) {
     prev.artistImage === next.artistImage &&
     prev.isPlaying === next.isPlaying &&
     Number(prev.durationMs || 0) === Number(next.durationMs || 0) &&
-    prev.externalUrl === next.externalUrl
+    prev.externalUrl === next.externalUrl &&
+    prev.bridgeMode === next.bridgeMode
   );
 }
 

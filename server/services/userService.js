@@ -37,6 +37,7 @@ class UserService {
     this.localUsersCache = null;
     this.localUsersCacheLoadedAt = 0;
     this.localUsersCacheTtlMs = Number(process.env.LOCAL_USERS_CACHE_TTL_MS || 5000);
+    this.bridgeDeviceSessions = new Map();
   }
 
   async readJSON() {
@@ -399,6 +400,105 @@ class UserService {
       key: user.spotifyBridgeKey || null,
       connectedAt: user.spotifyBridgeConnectedAt || null
     };
+  }
+
+  async createBridgeDeviceSession({ userId, deviceName, platform, tokenHash }) {
+    const prismaClient = await getPrisma();
+    if (prismaClient) {
+      return prismaClient.bridgeDeviceSession.create({
+        data: {
+          userId,
+          deviceName: deviceName || null,
+          platform: platform || null,
+          tokenHash
+        }
+      });
+    }
+
+    const id = `bridge-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
+    const record = {
+      id,
+      userId,
+      deviceName: deviceName || null,
+      platform: platform || null,
+      tokenHash,
+      createdAt: new Date().toISOString(),
+      lastSeenAt: new Date().toISOString(),
+      revokedAt: null
+    };
+    this.bridgeDeviceSessions.set(id, record);
+    return record;
+  }
+
+  async findBridgeDeviceSessionByTokenHash(tokenHash) {
+    const prismaClient = await getPrisma();
+    if (prismaClient) {
+      return prismaClient.bridgeDeviceSession.findFirst({
+        where: {
+          tokenHash,
+          revokedAt: null
+        }
+      });
+    }
+
+    return Array.from(this.bridgeDeviceSessions.values()).find(
+      (item) => item.tokenHash === tokenHash && !item.revokedAt
+    ) || null;
+  }
+
+  async touchBridgeDeviceSession(id) {
+    const prismaClient = await getPrisma();
+    if (prismaClient) {
+      return prismaClient.bridgeDeviceSession.update({
+        where: { id },
+        data: { lastSeenAt: new Date() }
+      });
+    }
+
+    const record = this.bridgeDeviceSessions.get(id);
+    if (!record) return null;
+    record.lastSeenAt = new Date().toISOString();
+    this.bridgeDeviceSessions.set(id, record);
+    return record;
+  }
+
+  async listBridgeDeviceSessionsByUserId(userId) {
+    const prismaClient = await getPrisma();
+    if (prismaClient) {
+      return prismaClient.bridgeDeviceSession.findMany({
+        where: {
+          userId,
+          revokedAt: null
+        },
+        orderBy: { createdAt: 'desc' }
+      });
+    }
+
+    return Array.from(this.bridgeDeviceSessions.values())
+      .filter((item) => item.userId === userId && !item.revokedAt)
+      .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+  }
+
+  async revokeBridgeDeviceSession({ id, userId }) {
+    const prismaClient = await getPrisma();
+    if (prismaClient) {
+      return prismaClient.bridgeDeviceSession.updateMany({
+        where: {
+          id,
+          userId,
+          revokedAt: null
+        },
+        data: {
+          revokedAt: new Date()
+        }
+      });
+    }
+
+    const record = this.bridgeDeviceSessions.get(id);
+    if (!record || record.userId !== userId || record.revokedAt) return null;
+    record.revokedAt = new Date().toISOString();
+    this.bridgeDeviceSessions.set(id, record);
+    return record;
   }
 }
 

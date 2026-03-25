@@ -1,13 +1,17 @@
 import { useCallback, useMemo, useState } from 'react';
 import { API_URL } from '../config/appConfig';
 
-export default function SpotifyBridgeSetup({ authPayload, initialConnectedAt = null }) {
+export default function SpotifyBridgeSetup({ authPayload, initialConnectedAt = null, onDesktopSyncResult }) {
   const [bookmarkletCode, setBookmarkletCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [revoking, setRevoking] = useState(false);
+  const [desktopLoading, setDesktopLoading] = useState(false);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
   const [connectedAt, setConnectedAt] = useState(initialConnectedAt);
+  const [desktopMessage, setDesktopMessage] = useState('');
+  const [agentStatus, setAgentStatus] = useState(null);
+  const LOCAL_AGENT_URL = 'http://127.0.0.1:43821';
 
   const connectedLabel = useMemo(() => {
     if (!connectedAt) return 'Não configurado';
@@ -77,6 +81,72 @@ export default function SpotifyBridgeSetup({ authPayload, initialConnectedAt = n
     }
   }, [authPayload?.sessionId, authPayload?.token]);
 
+  const handleDesktopSync = useCallback(async () => {
+    if (!authPayload?.token) return;
+    setDesktopLoading(true);
+    setDesktopMessage('');
+    setError('');
+    try {
+      const statusResponse = await fetch(`${LOCAL_AGENT_URL}/status`);
+      const statusPayload = await statusResponse.json().catch(() => ({}));
+      if (!statusResponse.ok) {
+        throw new Error('Muusic Bridge para macOS não encontrado em 127.0.0.1:43821.');
+      }
+      setAgentStatus(statusPayload);
+
+      const sessionResponse = await fetch(`${API_URL}/api/bridge/device/session`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${authPayload.token}`,
+          'x-session-id': authPayload.sessionId || ''
+        },
+        body: JSON.stringify({
+          deviceName: 'Muusic Bridge Mac',
+          platform: 'macos'
+        })
+      });
+      const sessionPayload = await sessionResponse.json().catch(() => ({}));
+      if (!sessionResponse.ok || !sessionPayload?.deviceToken) {
+        throw new Error(sessionPayload?.error || 'Não foi possível criar a sessão do app instalado.');
+      }
+
+      const pairResponse = await fetch(`${LOCAL_AGENT_URL}/pair`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          apiBaseUrl: API_URL || window.location.origin,
+          deviceId: sessionPayload.deviceId,
+          deviceToken: sessionPayload.deviceToken,
+          deviceName: sessionPayload.deviceName
+        })
+      });
+      const pairPayload = await pairResponse.json().catch(() => ({}));
+      if (!pairResponse.ok) {
+        throw new Error(pairPayload?.error || 'Não foi possível parear o Muusic Bridge local.');
+      }
+
+      const response = await fetch(`${LOCAL_AGENT_URL}/sync-once`, {
+        method: 'POST'
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload?.error || 'Não foi possível ler o app Spotify instalado.');
+      }
+
+      onDesktopSyncResult?.(payload.nowPlaying || null);
+      setDesktopMessage(
+        payload?.nowPlaying?.trackName
+          ? 'Leitura do app instalado concluída. O card de now playing foi atualizado.'
+          : 'Pareado com sucesso, mas nenhuma faixa foi detectada no app Spotify agora.'
+      );
+    } catch (nextError) {
+      setError(nextError.message || 'Não foi possível ler o app Spotify instalado.');
+    } finally {
+      setDesktopLoading(false);
+    }
+  }, [authPayload?.sessionId, authPayload?.token, onDesktopSyncResult]);
+
   if (!authPayload?.token) return null;
 
   return (
@@ -129,6 +199,39 @@ export default function SpotifyBridgeSetup({ authPayload, initialConnectedAt = n
           </p>
         </div>
       ) : null}
+
+      <div className="account-bridge-desktop">
+        <h4>Spotify App instalado</h4>
+        <p>
+          Para este MVP macOS, rode o Muusic Bridge localmente no seu Mac e use este botão para
+          parear o agente com o site e testar a leitura do app Spotify instalado.
+        </p>
+        <p className="account-bridge-hint">
+          Baixe o agente macOS:
+          {' '}
+          <a className="account-bridge-download" href="/downloads/muusic-bridge-macos.command" download>
+            muusic-bridge-macos.command
+          </a>
+          {' '}
+          e
+          {' '}
+          <a className="account-bridge-download" href="/downloads/muusic-bridge-macos.mjs" download>
+            muusic-bridge-macos.mjs
+          </a>
+          {' '}
+          na mesma pasta. Depois execute o
+          {' '}
+          <code>.command</code>
+          .
+        </p>
+        <div className="account-bridge-actions">
+          <button type="button" className="account-secondary-btn" onClick={handleDesktopSync} disabled={desktopLoading}>
+            {desktopLoading ? 'Pareando e lendo app...' : 'Conectar app instalado'}
+          </button>
+        </div>
+        {agentStatus?.paired ? <p className="account-bridge-hint">Agente local detectado em 127.0.0.1:43821.</p> : null}
+        {desktopMessage ? <p className="account-bridge-hint">{desktopMessage}</p> : null}
+      </div>
 
       {error ? <p className="account-bridge-error">{error}</p> : null}
     </section>
