@@ -360,10 +360,6 @@ export default function UsersPage({ apiFetch }) {
                           <TableCell>
                             <div className="space-y-1">
                               <div className="font-medium text-foreground">{getMusicStatus(user)}</div>
-                              <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                                <SourceBadge source={nowPlaying?.source} bridgeMode={nowPlaying?.bridgeMode} />
-                                <span>{music.historyCount || 0} reproducoes</span>
-                              </div>
                             </div>
                           </TableCell>
                           <TableCell>
@@ -377,10 +373,11 @@ export default function UsersPage({ apiFetch }) {
                           <TableCell className="text-right">
                             <Button
                               type="button"
-                              variant={isExpanded ? 'secondary' : 'ghost'}
+                              variant={isExpanded ? 'outline' : 'ghost'}
                               size="sm"
                               onClick={() => setExpandedUserId((current) => (current === user.id ? null : user.id))}
                               aria-expanded={isExpanded}
+                              className={isExpanded ? 'text-white hover:text-white' : 'text-white hover:text-white'}
                             >
                               {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                               {isExpanded ? 'Ocultar' : 'Abrir'}
