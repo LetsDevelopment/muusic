@@ -127,7 +127,7 @@ async function readPreferredBridgeNowPlaying(userId) {
   return null;
 }
 
-export function createBridgeRouter({ readAuthSession, userService, frontendUrl }) {
+export function createBridgeRouter({ readAuthSession, userService, frontendUrl, fetchSpotifyTrackByUrl }) {
   const router = Router();
 
   async function getMusicProfile(userId) {
@@ -166,6 +166,25 @@ export function createBridgeRouter({ readAuthSession, userService, frontendUrl }
       await userService.clearNowPlayingForUser(userId);
     }
     return getMusicProfile(userId);
+  }
+
+  async function enrichBridgeNowPlaying(nowPlaying) {
+    if (!nowPlaying || nowPlaying.albumImage || !nowPlaying.externalUrl || typeof fetchSpotifyTrackByUrl !== 'function') {
+      return nowPlaying;
+    }
+
+    const spotifyTrack = await fetchSpotifyTrackByUrl(nowPlaying.externalUrl);
+    if (!spotifyTrack) return nowPlaying;
+
+    return {
+      ...nowPlaying,
+      trackId: nowPlaying.trackId || spotifyTrack.trackId || null,
+      trackName: nowPlaying.trackName || spotifyTrack.trackName || '',
+      artistName: nowPlaying.artistName || spotifyTrack.artistName || '',
+      artists: nowPlaying.artists || spotifyTrack.artistName || nowPlaying.artistName || '',
+      albumImage: spotifyTrack.albumImage || nowPlaying.albumImage || null,
+      externalUrl: spotifyTrack.externalUrl || nowPlaying.externalUrl || null
+    };
   }
 
   async function syncPersistedNowPlayingFromPreferredBridge(userId) {
@@ -243,7 +262,8 @@ export function createBridgeRouter({ readAuthSession, userService, frontendUrl }
       return res.status(401).json({ error: 'Invalid bridge key' });
     }
 
-    const nowPlaying = normalizeBridgeNowPlaying(req.body || {});
+    const normalized = normalizeBridgeNowPlaying(req.body || {});
+    const nowPlaying = await enrichBridgeNowPlaying(normalized);
     if (!nowPlaying) {
       await clearBridgeNowPlaying(userId, 'browser');
       await syncPersistedNowPlayingFromPreferredBridge(userId);
@@ -337,10 +357,11 @@ export function createBridgeRouter({ readAuthSession, userService, frontendUrl }
       return res.status(401).json({ error: 'Invalid device token' });
     }
 
-    const nowPlaying = normalizeBridgeNowPlaying({
+    const normalized = normalizeBridgeNowPlaying({
       ...(req.body || {}),
       bridgeMode: 'desktop'
     });
+    const nowPlaying = await enrichBridgeNowPlaying(normalized);
     if (!nowPlaying) {
       await clearBridgeNowPlaying(session.userId, 'desktop');
       await syncPersistedNowPlayingFromPreferredBridge(session.userId);

@@ -258,7 +258,7 @@ const { readAuthSession, requireAdmin } = createLocalAuth({
   userService,
   sanitizeRole
 });
-const { fetchSpotifyNowPlaying, refreshSpotifyAccessToken, buildSpotifyBasicHeader, fetchSpotifyArtist, searchSpotifyArtist, fetchSpotifyAlbumTracks, fetchSpotifyArtistTopTracks } =
+const { fetchSpotifyNowPlaying, refreshSpotifyAccessToken, buildSpotifyBasicHeader, fetchSpotifyArtist, searchSpotifyArtist, fetchSpotifyAlbumTracks, fetchSpotifyArtistTopTracks, fetchSpotifyTrackByUrl } =
   createSpotifyApiService({
   spotifyClientId: process.env.SPOTIFY_CLIENT_ID || '',
   spotifyClientSecret: process.env.SPOTIFY_CLIENT_SECRET || ''
@@ -365,7 +365,8 @@ app.use(
   createBridgeRouter({
     readAuthSession,
     userService,
-    frontendUrl: FRONTEND_URL
+    frontendUrl: FRONTEND_URL,
+    fetchSpotifyTrackByUrl
   })
 );
 
