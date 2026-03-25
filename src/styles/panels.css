@@ -2410,17 +2410,20 @@
   backdrop-filter: blur(8px);
   display: grid;
   place-items: center;
+  overflow-y: auto;
   z-index: 34;
 }
 
 .account-card {
   width: min(660px, calc(100vw - 32px));
+  max-height: calc(100dvh - 48px);
   background: rgba(8, 12, 18, 0.94);
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 14px;
   padding: 18px;
   display: grid;
   gap: 14px;
+  overflow-y: auto;
 }
 
 .account-loading {
