@@ -129,7 +129,7 @@ function ConnectionSnapshotCard({ music, bridgeDevices }) {
   return (
     <section className="rounded-2xl border border-border bg-card/70 p-4">
       <div className="text-sm font-semibold text-foreground">Conexoes e dispositivos</div>
-      <div className="mt-4 grid gap-3 xl:grid-cols-[0.95fr_1.05fr]">
+      <div className="mt-4 flex flex-col gap-3">
         <div className="rounded-xl border border-border bg-background/40 p-3">
           <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Conta</div>
           <div className="mt-3 space-y-2 text-sm text-foreground">
@@ -391,11 +391,9 @@ export default function UsersPage({ apiFetch }) {
                         {isExpanded ? (
                           <TableRow className="hover:bg-transparent">
                             <TableCell colSpan={4} className="bg-secondary/15">
-                              <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-                                <div className="space-y-4">
-                                  <MusicSnapshotCard music={music} />
-                                  <ConnectionSnapshotCard music={music} bridgeDevices={bridgeDevices} />
-                                </div>
+                              <div className="space-y-4">
+                                <MusicSnapshotCard music={music} />
+                                <ConnectionSnapshotCard music={music} bridgeDevices={bridgeDevices} />
                                 <HistoryPanel music={music} musicHistory={musicHistory} />
                               </div>
                             </TableCell>
