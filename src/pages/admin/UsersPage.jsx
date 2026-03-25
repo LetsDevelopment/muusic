@@ -36,10 +36,15 @@ function getMusicStatus(user) {
 }
 
 function getUserMeta(user) {
-  const parts = [user.email];
-  parts.push(user.role === 'ADMIN' ? 'Admin' : 'Usuario');
-  if (user.createdAt) parts.push(`desde ${formatDate(user.createdAt)}`);
-  return parts.join(' • ');
+  const totalReproductions = Number(user?.music?.historyCount || 0);
+  if (totalReproductions === 1) return '1 reproducao salva';
+  return `${totalReproductions} reproducoes salvas`;
+}
+
+function isUserPlayingNow(user) {
+  const expiresAt = user?.music?.nowPlaying?.expiresAt ? new Date(user.music.nowPlaying.expiresAt).getTime() : 0;
+  if (!Number.isFinite(expiresAt) || !expiresAt) return false;
+  return expiresAt > Date.now();
 }
 
 function exportUsersCsv(items) {
@@ -124,7 +129,7 @@ function ConnectionSnapshotCard({ music, bridgeDevices }) {
   return (
     <section className="rounded-2xl border border-border bg-card/70 p-4">
       <div className="text-sm font-semibold text-foreground">Conexoes e dispositivos</div>
-      <div className="mt-4 grid gap-3 md:grid-cols-2">
+      <div className="mt-4 grid gap-3 xl:grid-cols-[0.95fr_1.05fr]">
         <div className="rounded-xl border border-border bg-background/40 p-3">
           <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Conta</div>
           <div className="mt-3 space-y-2 text-sm text-foreground">
@@ -167,19 +172,6 @@ function HistoryPanel({ music, musicHistory }) {
           {music.historyCount || 0} reproducoes salvas no banco
         </div>
       </div>
-
-      {music.recentTracks?.length ? (
-        <div className="mt-4 rounded-xl border border-border bg-background/40 p-3">
-          <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Faixas recentes</div>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {music.recentTracks.map((track) => (
-              <span key={track} className="rounded-full border border-border px-2.5 py-1 text-xs text-foreground">
-                {track}
-              </span>
-            ))}
-          </div>
-        </div>
-      ) : null}
 
       <div className="mt-4 space-y-3">
         {musicHistory.length === 0 ? (
@@ -353,7 +345,15 @@ export default function UsersPage({ apiFetch }) {
                         <TableRow>
                           <TableCell>
                             <div className="space-y-1">
-                              <div className="font-medium text-foreground">{user.name || 'Usuario'}</div>
+                              <div className="flex items-center gap-2">
+                                <div className="font-medium text-foreground">{user.name || 'Usuario'}</div>
+                                {isUserPlayingNow(user) ? (
+                                  <span className="relative inline-flex h-2.5 w-2.5 shrink-0">
+                                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400" />
+                                  </span>
+                                ) : null}
+                              </div>
                               <div className="text-xs text-muted-foreground">{getUserMeta(user)}</div>
                             </div>
                           </TableCell>

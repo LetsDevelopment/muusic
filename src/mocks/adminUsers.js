@@ -14,6 +14,23 @@ export const mockUsers = [
 
 export const DEFAULT_USERS_PAGE_SIZE = 8;
 
+function getLatestMusicTimestamp(user) {
+  const nowPlayingStartedAt = user?.music?.nowPlaying?.startedAt ? new Date(user.music.nowPlaying.startedAt).getTime() : 0;
+  const latestHistoryPlayedAt = Array.isArray(user?.music?.musicHistory) && user.music.musicHistory.length > 0
+    ? new Date(user.music.musicHistory[0]?.playedAt || 0).getTime()
+    : 0;
+  return Math.max(
+    Number.isFinite(nowPlayingStartedAt) ? nowPlayingStartedAt : 0,
+    Number.isFinite(latestHistoryPlayedAt) ? latestHistoryPlayedAt : 0
+  );
+}
+
+function isUserActiveNow(user) {
+  const expiresAt = user?.music?.nowPlaying?.expiresAt ? new Date(user.music.nowPlaying.expiresAt).getTime() : 0;
+  if (!Number.isFinite(expiresAt) || !expiresAt) return false;
+  return expiresAt > Date.now();
+}
+
 export function calculateUsersKpis(users) {
   const topMusicUser = users.reduce(
     (best, user) => {
@@ -46,7 +63,15 @@ export function queryUsers({ users, search = '', role = 'all', page = 1, pageSiz
       if (!term) return true;
       return user.email.toLowerCase().includes(term) || String(user.name || '').toLowerCase().includes(term);
     })
-    .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+    .sort((a, b) => {
+      const activeDiff = Number(isUserActiveNow(b)) - Number(isUserActiveNow(a));
+      if (activeDiff !== 0) return activeDiff;
+
+      const latestMusicDiff = getLatestMusicTimestamp(b) - getLatestMusicTimestamp(a);
+      if (latestMusicDiff !== 0) return latestMusicDiff;
+
+      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+    });
 
   const total = filtered.length;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
