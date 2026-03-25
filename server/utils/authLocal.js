@@ -41,7 +41,8 @@ export function sanitizeUserResponse(user) {
     name: user.name || user.displayName || user.username || 'Usuario',
     email: user.email,
     role: sanitizeRole(user.role),
-    avatarUrl: user.avatarUrl || null
+    avatarUrl: user.avatarUrl || null,
+    spotifyBridgeConnectedAt: user.spotifyBridgeConnectedAt || null
   };
 }
 

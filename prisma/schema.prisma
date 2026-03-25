@@ -20,18 +20,21 @@ model User {
   passwordHash            String
   displayName             String?
   avatarUrl               String?
-  spotifyId    String?  @unique
-  latitude     Float?
-  longitude    Float?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  nowPlaying   NowPlaying?
-  trendings    TrendingPlayback[]
-  sessions     Session[]
-  resetTokens  PasswordResetToken[]
+  spotifyId               String?   @unique
+  spotifyBridgeKey        String?
+  spotifyBridgeConnectedAt DateTime?
+  latitude                Float?
+  longitude               Float?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  nowPlaying              NowPlaying?
+  trendings               TrendingPlayback[]
+  sessions                Session[]
+  resetTokens             PasswordResetToken[]
 
   @@index([email])
   @@index([spotifyId])
+  @@index([spotifyBridgeConnectedAt])
   @@index([createdAt, id])
   @@index([role, createdAt])
 }

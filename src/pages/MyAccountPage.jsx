@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, Upload, UserRound, X } from 'lucide-react';
 import { accountService } from '../services/accountService';
+import SpotifyBridgeSetup from '../components/SpotifyBridgeSetup';
 
 const TAB_KEYS = ['perfil', 'seguranca'];
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -366,6 +367,11 @@ export default function MyAccountPage({ authUser, onBack, onSettingsChange, onLo
                 {savingProfile ? 'Salvando...' : 'Salvar'}
               </button>
             </div>
+
+            <SpotifyBridgeSetup
+              authPayload={authPayload}
+              initialConnectedAt={authUser?.spotifyBridgeConnectedAt || null}
+            />
           </div>
         )}
 

@@ -74,6 +74,9 @@ class UserService {
       role: user.role === 'ADMIN' ? 'ADMIN' : 'USER',
       avatarUrl: user.avatarUrl || null,
       spotifyId: user.spotifyId || null,
+      spotifyBridgeConnectedAt: user.spotifyBridgeConnectedAt
+        ? new Date(user.spotifyBridgeConnectedAt).toISOString()
+        : null,
       passwordHash: user.passwordHash,
       createdAt: user.createdAt
     };
@@ -108,7 +111,9 @@ class UserService {
           passwordHash: data.passwordHash,
           displayName: data.displayName || data.name || null,
           avatarUrl: data.avatarUrl || null,
-          spotifyId: data.spotifyId || null
+          spotifyId: data.spotifyId || null,
+          spotifyBridgeKey: data.spotifyBridgeKey || null,
+          spotifyBridgeConnectedAt: data.spotifyBridgeConnectedAt ? new Date(data.spotifyBridgeConnectedAt) : null
         }
       });
       return this.toAppUser(created);
@@ -124,6 +129,8 @@ class UserService {
       role: data.role === 'ADMIN' ? 'ADMIN' : 'USER',
       passwordHash: data.passwordHash,
       spotifyId: data.spotifyId || null,
+      spotifyBridgeKey: data.spotifyBridgeKey || null,
+      spotifyBridgeConnectedAt: data.spotifyBridgeConnectedAt || null,
       createdAt: new Date().toISOString()
     };
     users.push(user);
@@ -304,6 +311,10 @@ class UserService {
       if (typeof data.avatarUrl === 'string' || data.avatarUrl === null) payload.avatarUrl = data.avatarUrl;
       if (typeof data.passwordHash === 'string') payload.passwordHash = data.passwordHash;
       if (typeof data.spotifyId === 'string' || data.spotifyId === null) payload.spotifyId = data.spotifyId;
+      if (typeof data.spotifyBridgeKey === 'string' || data.spotifyBridgeKey === null) payload.spotifyBridgeKey = data.spotifyBridgeKey;
+      if (data.spotifyBridgeConnectedAt instanceof Date) payload.spotifyBridgeConnectedAt = data.spotifyBridgeConnectedAt;
+      else if (typeof data.spotifyBridgeConnectedAt === 'string') payload.spotifyBridgeConnectedAt = new Date(data.spotifyBridgeConnectedAt);
+      else if (data.spotifyBridgeConnectedAt === null) payload.spotifyBridgeConnectedAt = null;
       if (typeof nextRole === 'string') payload.role = nextRole;
 
       const updated = await prismaClient.user.update({
@@ -322,6 +333,9 @@ class UserService {
     if (typeof data.avatarUrl === 'string' || data.avatarUrl === null) users[index].avatarUrl = data.avatarUrl;
     if (typeof data.passwordHash === 'string') users[index].passwordHash = data.passwordHash;
     if (typeof data.spotifyId === 'string' || data.spotifyId === null) users[index].spotifyId = data.spotifyId;
+    if (typeof data.spotifyBridgeKey === 'string' || data.spotifyBridgeKey === null) users[index].spotifyBridgeKey = data.spotifyBridgeKey;
+    if (data.spotifyBridgeConnectedAt instanceof Date) users[index].spotifyBridgeConnectedAt = data.spotifyBridgeConnectedAt.toISOString();
+    else if (typeof data.spotifyBridgeConnectedAt === 'string' || data.spotifyBridgeConnectedAt === null) users[index].spotifyBridgeConnectedAt = data.spotifyBridgeConnectedAt;
     if (typeof nextRole === 'string') users[index].role = nextRole;
 
     await this.writeJSON(users);
@@ -359,6 +373,32 @@ class UserService {
     users[index].passwordHash = passwordHash;
     await this.writeJSON(users);
     return this.toAppUser(users[index]);
+  }
+
+  async getSpotifyBridgeByUserId(id) {
+    const prismaClient = await getPrisma();
+    if (prismaClient) {
+      const user = await prismaClient.user.findUnique({
+        where: { id },
+        select: {
+          spotifyBridgeKey: true,
+          spotifyBridgeConnectedAt: true
+        }
+      });
+      if (!user) return null;
+      return {
+        key: user.spotifyBridgeKey || null,
+        connectedAt: user.spotifyBridgeConnectedAt ? new Date(user.spotifyBridgeConnectedAt).toISOString() : null
+      };
+    }
+
+    const users = await this.readJSON();
+    const user = users.find((item) => item.id === id);
+    if (!user) return null;
+    return {
+      key: user.spotifyBridgeKey || null,
+      connectedAt: user.spotifyBridgeConnectedAt || null
+    };
   }
 }
 

@@ -168,6 +168,7 @@ export default function App() {
     applySpotifyToken,
     exchangeSpotifyCode,
     refreshSpotifyNowPlaying,
+    refreshBridgeNowPlaying,
     spotifyError,
     spotifyConnecting,
     setAuthUser
@@ -511,6 +512,49 @@ export default function App() {
   }, [activeUser?.spotifyToken, refreshSpotifyNowPlaying, joined, socketRef]);
 
   useEffect(() => {
+    if (!activeUser?.token || activeUser.token === 'guest-local') return undefined;
+    if (activeUser?.spotifyToken) return undefined;
+
+    let cancelled = false;
+    let timerId = null;
+
+    const schedule = (delay = 7000) => {
+      timerId = window.setTimeout(async () => {
+        const nowPlaying = await refreshBridgeNowPlaying();
+        if (cancelled) return;
+        if (joined && socketRef.current) {
+          socketRef.current.emit('playback:update', {
+            nowPlaying: buildRealtimeNowPlayingPayload(nowPlaying)
+          });
+        }
+        schedule(nowPlaying ? getAdaptivePollingDelay(nowPlaying) : 7000);
+      }, delay);
+    };
+
+    refreshBridgeNowPlaying()
+      .then((nowPlaying) => {
+        if (!cancelled) {
+          if (joined && socketRef.current) {
+            socketRef.current.emit('playback:update', {
+              nowPlaying: buildRealtimeNowPlayingPayload(nowPlaying)
+            });
+          }
+          schedule(nowPlaying ? getAdaptivePollingDelay(nowPlaying) : 7000);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          schedule(7000);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+      if (timerId) window.clearTimeout(timerId);
+    };
+  }, [activeUser?.spotifyToken, activeUser?.token, joined, refreshBridgeNowPlaying, socketRef]);
+
+  useEffect(() => {
     if (!joined || !socketRef.current) return;
     socketRef.current.emit('playback:update', {
       nowPlaying: buildRealtimeNowPlayingPayload(activeUser?.nowPlaying || null)
@@ -852,11 +896,11 @@ export default function App() {
       />
 
       <div className="now-playing-card">
-        {activeUser?.spotify && hasActiveTrack ? (
+        {hasActiveTrack ? (
           <div className="now-playing-content">
             {activeUser?.nowPlaying?.artistImage || activeUser?.nowPlaying?.albumImage || activeUser?.spotify?.image ? (
               <img
-                src={activeUser.nowPlaying.artistImage || activeUser.nowPlaying.albumImage || activeUser.spotify.image}
+                src={activeUser.nowPlaying.artistImage || activeUser.nowPlaying.albumImage || activeUser?.spotify?.image}
                 alt={spotifyArtistName || spotifyTrackName}
                 className="now-playing-cover"
               />
@@ -903,7 +947,7 @@ export default function App() {
             )}
             <div className="now-playing-copy">
               <p className="now-playing-title">Conectar ao Spotify</p>
-              <p className="now-playing-empty">Clique no icone do Spotify na barra lateral.</p>
+              <p className="now-playing-empty">Clique no ícone do Spotify ou ative o sync do Spotify Web em Minha Conta.</p>
             </div>
           </div>
         )}

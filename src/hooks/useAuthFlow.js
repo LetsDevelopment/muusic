@@ -452,6 +452,40 @@ export function useAuthFlow() {
     }
   }, [authUser?.spotifyToken]);
 
+  const refreshBridgeNowPlaying = useCallback(async () => {
+    if (!authUser?.token || authUser.token === 'guest-local') return null;
+
+    try {
+      const response = await fetch(`${API_URL}/api/bridge/now-playing`, {
+        headers: {
+          Authorization: `Bearer ${authUser.token}`,
+          'x-session-id': authUser.sessionId || ''
+        }
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        return null;
+      }
+
+      setAuthUser((prev) => {
+        if (!prev) return prev;
+        const nextNowPlaying = payload.nowPlaying || null;
+        if (isSameNowPlaying(prev.nowPlaying || null, nextNowPlaying)) {
+          return prev;
+        }
+        const next = {
+          ...prev,
+          nowPlaying: nextNowPlaying
+        };
+        localStorage.setItem(STORAGE_SESSION_KEY, JSON.stringify(next));
+        return next;
+      });
+      return payload.nowPlaying || null;
+    } catch {
+      return null;
+    }
+  }, [authUser?.sessionId, authUser?.token]);
+
   return {
     authMode,
     setAuthMode,
@@ -475,6 +509,7 @@ export function useAuthFlow() {
     applySpotifyToken,
     exchangeSpotifyCode,
     refreshSpotifyNowPlaying,
+    refreshBridgeNowPlaying,
     spotifyError,
     spotifyConnecting
   };

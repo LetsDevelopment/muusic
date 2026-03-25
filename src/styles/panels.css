@@ -2999,6 +2999,111 @@
   padding-top: 12px;
 }
 
+.account-bridge-section {
+  margin-top: 12px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: grid;
+  gap: 14px;
+}
+
+.account-bridge-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.account-bridge-head h3 {
+  margin: 0;
+  color: #f4f6fb;
+  font-size: 18px;
+}
+
+.account-bridge-head p {
+  margin: 6px 0 0;
+  max-width: 620px;
+  color: #a5b0c0;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.account-bridge-status {
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.06);
+  color: #c5cedb;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.account-bridge-status.is-on {
+  background: rgba(29, 185, 84, 0.16);
+  color: #d7ffe6;
+}
+
+.account-bridge-steps {
+  margin: 0;
+  padding-left: 18px;
+  color: #d3dbe7;
+  display: grid;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.account-bridge-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.account-bridge-bookmarklet {
+  display: grid;
+  gap: 10px;
+}
+
+.account-bridge-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  width: fit-content;
+  padding: 0 16px;
+  border-radius: 12px;
+  background: rgba(29, 185, 84, 0.18);
+  border: 1px solid rgba(29, 185, 84, 0.34);
+  color: #eafff1;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: grab;
+}
+
+.account-bridge-link:active {
+  cursor: grabbing;
+}
+
+.account-bridge-hint,
+.account-bridge-error {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.account-bridge-hint {
+  color: #a9b6c7;
+}
+
+.account-bridge-error {
+  color: #ffb5c3;
+}
+
 .missing-token {
   position: absolute;
   left: 50%;

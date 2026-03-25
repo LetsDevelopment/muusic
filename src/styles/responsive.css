@@ -233,6 +233,10 @@
     flex-wrap: wrap;
   }
 
+  .account-bridge-head {
+    flex-direction: column;
+  }
+
   .account-logout-btn {
     margin-left: 0;
   }

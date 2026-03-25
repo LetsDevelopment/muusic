@@ -21,6 +21,7 @@ import mapRoutes from './routes/map.js';
 import { createLocalAuthRouter } from './routes/localAuth.js';
 import { createPublicRouter } from './routes/public.js';
 import { createSpotifyRouter } from './routes/spotify.js';
+import { createBridgeRouter } from './routes/bridge.js';
 import geolocationService from './services/geolocation.js';
 import accountSettingsService from './services/accountSettingsService.js';
 import trendingPlaybackService from './services/trendingPlaybackService.js';
@@ -148,7 +149,7 @@ function sanitizeNowPlayingPayload(nowPlaying) {
     albumImage: nowPlaying.albumImage || null,
     artistImage: nowPlaying.artistImage || null,
     externalUrl: nowPlaying.externalUrl || null,
-    source: 'spotify',
+    source: nowPlaying.source === 'bridge' ? 'bridge' : 'spotify',
     updatedAt: Date.now()
   };
 }
@@ -341,6 +342,14 @@ app.use(
     cleanupSpotifyExchangeCodes,
     spotifyExchangeCodes,
     spotifyExchangeTtlMs: SPOTIFY_EXCHANGE_TTL_MS
+  })
+);
+
+app.use(
+  createBridgeRouter({
+    readAuthSession,
+    userService,
+    frontendUrl: FRONTEND_URL
   })
 );
 
