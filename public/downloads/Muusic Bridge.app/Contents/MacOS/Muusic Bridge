@@ -1,0 +1,10 @@
+#!/bin/zsh
+APP_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+SCRIPT_PATH="$APP_ROOT/Resources/muusic-bridge.mjs"
+
+if ! command -v node >/dev/null 2>&1; then
+  osascript -e 'display dialog "Node.js não encontrado. Instale o Node.js neste Mac para usar o Muusic Bridge." buttons {"OK"} default button "OK" with icon caution'
+  exit 1
+fi
+
+exec node "$SCRIPT_PATH"
