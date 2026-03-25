@@ -133,7 +133,15 @@ export default function DashboardPage({ apiFetch }) {
                     <TableRow key={user.id}>
                       <TableCell className="font-medium">{user.name || 'Usuário'}</TableCell>
                       <TableCell>{nowPlaying.artistName || 'Artista não informado'}</TableCell>
-                      <TableCell>{nowPlaying.trackName || 'Faixa desconhecida'}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <span className="relative inline-flex h-2.5 w-2.5 shrink-0">
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400" />
+                          </span>
+                          <span>{nowPlaying.trackName || 'Faixa desconhecida'}</span>
+                        </div>
+                      </TableCell>
                       <TableCell>{user.city || getFallbackCity(user.id)}</TableCell>
                     </TableRow>
                   );
