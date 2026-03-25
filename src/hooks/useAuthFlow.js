@@ -14,8 +14,7 @@ function isSameNowPlaying(prev, next) {
     prev.artistImage === next.artistImage &&
     prev.isPlaying === next.isPlaying &&
     Number(prev.durationMs || 0) === Number(next.durationMs || 0) &&
-    prev.externalUrl === next.externalUrl &&
-    prev.source === next.source
+    prev.externalUrl === next.externalUrl
   );
 }
 
@@ -39,31 +38,6 @@ export function useAuthFlow() {
   const [authBooting, setAuthBooting] = useState(Boolean(initialSession?.token));
   const [spotifyError, setSpotifyError] = useState('');
   const [spotifyConnecting, setSpotifyConnecting] = useState(false);
-  const [lastfmError, setLastfmError] = useState('');
-  const [lastfmConnecting, setLastfmConnecting] = useState(false);
-
-  const persistSession = useCallback((session) => {
-    if (!session) {
-      localStorage.removeItem(STORAGE_SESSION_KEY);
-      return;
-    }
-    localStorage.setItem(STORAGE_SESSION_KEY, JSON.stringify(session));
-  }, []);
-
-  const normalizeSession = useCallback((baseUser, extras = {}) => ({
-    ...baseUser,
-    spotify: extras.spotify ?? baseUser?.spotify ?? null,
-    spotifyToken: extras.spotifyToken ?? baseUser?.spotifyToken ?? '',
-    spotifyConnectedAt: extras.spotifyConnectedAt ?? baseUser?.spotifyConnectedAt ?? null,
-    lastfm: extras.lastfm ?? baseUser?.lastfm ?? null,
-    lastfmConnectedAt: extras.lastfmConnectedAt ?? baseUser?.lastfmConnectedAt ?? baseUser?.lastfm?.connectedAt ?? null,
-    musicProvider: extras.musicProvider ?? baseUser?.musicProvider ?? null,
-    onboardingMusicCompleted:
-      typeof extras.onboardingMusicCompleted === 'boolean'
-        ? extras.onboardingMusicCompleted
-        : Boolean(baseUser?.onboardingMusicCompleted),
-    nowPlaying: extras.nowPlaying ?? baseUser?.nowPlaying ?? null
-  }), []);
 
   useEffect(() => {
     if (!initialSession?.token) {
@@ -88,7 +62,7 @@ export function useAuthFlow() {
         });
         if (!response.ok) {
           if (!cancelled) {
-            persistSession(null);
+            localStorage.removeItem(STORAGE_SESSION_KEY);
             setAuthUser(null);
           }
           return;
@@ -96,28 +70,20 @@ export function useAuthFlow() {
         const payload = await response.json();
         if (!cancelled) {
           const session = {
-            ...normalizeSession(payload.user, {
-              spotify: initialSession.spotify || null,
-              spotifyToken: initialSession.spotifyToken || '',
-              spotifyConnectedAt: initialSession.spotifyConnectedAt || null,
-              nowPlaying: initialSession.nowPlaying || null,
-              lastfm: payload.user?.lastfm || initialSession.lastfm || null,
-              lastfmConnectedAt: payload.user?.lastfm?.connectedAt || initialSession.lastfmConnectedAt || null,
-              musicProvider: payload.user?.musicProvider || initialSession.musicProvider || null,
-              onboardingMusicCompleted:
-                typeof payload.user?.onboardingMusicCompleted === 'boolean'
-                  ? payload.user.onboardingMusicCompleted
-                  : Boolean(initialSession.onboardingMusicCompleted)
-            }),
+            ...payload.user,
             token: initialSession.token,
-            sessionId: payload.sessionId || initialSession.sessionId || ''
+            sessionId: payload.sessionId || initialSession.sessionId || '',
+            spotify: initialSession.spotify || null,
+            spotifyToken: initialSession.spotifyToken || '',
+            spotifyConnectedAt: initialSession.spotifyConnectedAt || null,
+            nowPlaying: initialSession.nowPlaying || null
           };
           setAuthUser(session);
-          persistSession(session);
+          localStorage.setItem(STORAGE_SESSION_KEY, JSON.stringify(session));
         }
       } catch {
         if (!cancelled) {
-          persistSession(null);
+          localStorage.removeItem(STORAGE_SESSION_KEY);
           setAuthUser(null);
         }
       } finally {
@@ -131,7 +97,7 @@ export function useAuthFlow() {
     return () => {
       cancelled = true;
     };
-  }, [initialSession, normalizeSession, persistSession]);
+  }, [initialSession]);
 
   function updateAuthField(field, value) {
     setAuthForm((prev) => ({ ...prev, [field]: value }));
@@ -186,12 +152,12 @@ export function useAuthFlow() {
           return;
         }
         const session = {
-          ...normalizeSession(payload.user, { onboardingMusicCompleted: Boolean(payload.user?.onboardingMusicCompleted) }),
+          ...payload.user,
           token: payload.token,
           sessionId: payload.sessionId || ''
         };
         setAuthUser(session);
-        persistSession(session);
+        localStorage.setItem(STORAGE_SESSION_KEY, JSON.stringify(session));
         setAuthForm({
           name: '',
           email: '',
@@ -220,12 +186,12 @@ export function useAuthFlow() {
         return;
       }
       const session = {
-        ...normalizeSession(payload.user, { onboardingMusicCompleted: Boolean(payload.user?.onboardingMusicCompleted) }),
+        ...payload.user,
         token: payload.token,
         sessionId: payload.sessionId || ''
       };
       setAuthUser(session);
-      persistSession(session);
+      localStorage.setItem(STORAGE_SESSION_KEY, JSON.stringify(session));
       setAuthForm({
         name: '',
         email: '',
@@ -328,7 +294,7 @@ export function useAuthFlow() {
     } catch {
       // Ignore network errors and clear local session.
     } finally {
-      persistSession(null);
+      localStorage.removeItem(STORAGE_SESSION_KEY);
       setAuthUser(null);
       setAuthBooting(false);
     }
@@ -344,16 +310,12 @@ export function useAuthFlow() {
       spotify: null,
       spotifyToken: '',
       spotifyConnectedAt: null,
-      lastfm: null,
-      lastfmConnectedAt: null,
-      musicProvider: null,
-      onboardingMusicCompleted: true,
       nowPlaying: null
     };
     setAuthUser(session);
     setAuthBooting(false);
     try {
-      persistSession(session);
+      localStorage.setItem(STORAGE_SESSION_KEY, JSON.stringify(session));
     } catch {
       // Ignore storage errors and keep in-memory session.
     }
@@ -392,36 +354,6 @@ export function useAuthFlow() {
     }
   }, [authUser]);
 
-  const connectLastfm = useCallback(async () => {
-    if (!authUser?.token || authUser.token === 'guest-local') {
-      setLastfmError('Faca login com conta para conectar Last.fm.');
-      return;
-    }
-
-    setLastfmError('');
-    setLastfmConnecting(true);
-    try {
-      const response = await fetch(`${API_URL}/auth/lastfm/connect`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${authUser.token}`,
-          'x-session-id': authUser.sessionId || ''
-        }
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok || !payload?.url) {
-        setLastfmError(payload?.error || 'Falha ao iniciar conexao Last.fm.');
-        return;
-      }
-      window.location.assign(payload.url);
-    } catch {
-      setLastfmError('Nao foi possivel conectar ao Last.fm agora.');
-    } finally {
-      setLastfmConnecting(false);
-    }
-  }, [authUser]);
-
   const applySpotifyToken = useCallback(async (spotifyToken) => {
     if (!spotifyToken) return false;
     try {
@@ -438,35 +370,23 @@ export function useAuthFlow() {
 
       setAuthUser((prev) => {
         if (!prev) return prev;
-        const next = normalizeSession(prev, {
+        const next = {
+          ...prev,
           spotify: payload.spotify || null,
           spotifyToken,
           spotifyConnectedAt: new Date().toISOString(),
-          musicProvider: prev?.musicProvider || 'spotify',
-          onboardingMusicCompleted: true,
           nowPlaying: payload.nowPlaying || null
-        });
-        persistSession(next);
+        };
+        localStorage.setItem(STORAGE_SESSION_KEY, JSON.stringify(next));
         return next;
       });
       setSpotifyError('');
-      if (authUser?.token && authUser.token !== 'guest-local') {
-        fetch(`${API_URL}/auth/local/music-onboarding`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${authUser.token}`,
-            'x-session-id': authUser.sessionId || ''
-          },
-          body: JSON.stringify({ completed: true })
-        }).catch(() => {});
-      }
       return true;
     } catch {
       setSpotifyError('Falha ao validar a conexao Spotify.');
       return false;
     }
-  }, [authUser?.sessionId, authUser?.token, normalizeSession, persistSession]);
+  }, []);
 
   const exchangeSpotifyCode = useCallback(
     async (spotifyCode) => {
@@ -498,46 +418,6 @@ export function useAuthFlow() {
     [authUser?.token, authUser?.sessionId, applySpotifyToken]
   );
 
-  const exchangeLastfmCode = useCallback(async (lastfmCode) => {
-    const code = String(lastfmCode || '').trim();
-    if (!code || !authUser?.token || authUser.token === 'guest-local') return false;
-
-    try {
-      const response = await fetch(`${API_URL}/auth/lastfm/exchange`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${authUser.token}`,
-          'x-session-id': authUser.sessionId || ''
-        },
-        body: JSON.stringify({ code })
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok || !payload?.lastfm) {
-        setLastfmError(payload?.error || 'Codigo Last.fm invalido.');
-        return false;
-      }
-
-      setAuthUser((prev) => {
-        if (!prev) return prev;
-        const next = normalizeSession(prev, {
-          lastfm: payload.lastfm,
-          lastfmConnectedAt: payload.lastfm?.connectedAt || new Date().toISOString(),
-          musicProvider: payload.musicProvider || 'lastfm',
-          onboardingMusicCompleted: payload.onboardingMusicCompleted !== false,
-          nowPlaying: payload.nowPlaying || null
-        });
-        persistSession(next);
-        return next;
-      });
-      setLastfmError('');
-      return true;
-    } catch {
-      setLastfmError('Falha ao trocar codigo do Last.fm.');
-      return false;
-    }
-  }, [authUser?.sessionId, authUser?.token, normalizeSession, persistSession]);
-
   const refreshSpotifyNowPlaying = useCallback(async () => {
     if (!authUser?.spotifyToken) return null;
 
@@ -563,143 +443,14 @@ export function useAuthFlow() {
           nowPlaying: nextNowPlaying,
           spotifyToken: nextSpotifyToken
         };
-        persistSession(next);
+        localStorage.setItem(STORAGE_SESSION_KEY, JSON.stringify(next));
         return next;
       });
       return payload.nowPlaying || null;
     } catch {
       return null;
     }
-  }, [authUser?.spotifyToken, persistSession]);
-
-  const refreshLastfmNowPlaying = useCallback(async () => {
-    if (!authUser?.token || authUser.token === 'guest-local' || !authUser?.lastfm?.username) return null;
-
-    try {
-      const response = await fetch(`${API_URL}/auth/lastfm/now-playing`, {
-        headers: {
-          Authorization: `Bearer ${authUser.token}`,
-          'x-session-id': authUser.sessionId || ''
-        }
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) return null;
-
-      setAuthUser((prev) => {
-        if (!prev) return prev;
-        const nextNowPlaying = payload.nowPlaying || null;
-        if (isSameNowPlaying(prev.nowPlaying || null, nextNowPlaying)) return prev;
-        const next = {
-          ...prev,
-          nowPlaying: nextNowPlaying
-        };
-        persistSession(next);
-        return next;
-      });
-      return payload.nowPlaying || null;
-    } catch {
-      return null;
-    }
-  }, [authUser?.lastfm?.username, authUser?.sessionId, authUser?.token, persistSession]);
-
-  const completeMusicOnboarding = useCallback(async (completed = true) => {
-    if (!authUser?.token || authUser.token === 'guest-local') return false;
-    try {
-      const response = await fetch(`${API_URL}/auth/local/music-onboarding`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${authUser.token}`,
-          'x-session-id': authUser.sessionId || ''
-        },
-        body: JSON.stringify({ completed })
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok || !payload?.user) return false;
-
-      setAuthUser((prev) => {
-        if (!prev) return prev;
-        const next = normalizeSession(
-          {
-            ...prev,
-            ...payload.user
-          },
-          {
-            spotify: prev.spotify,
-            spotifyToken: prev.spotifyToken,
-            spotifyConnectedAt: prev.spotifyConnectedAt,
-            lastfm: prev.lastfm,
-            lastfmConnectedAt: prev.lastfmConnectedAt,
-            musicProvider: prev.musicProvider,
-            nowPlaying: prev.nowPlaying
-          }
-        );
-        persistSession(next);
-        return next;
-      });
-      return true;
-    } catch {
-      return false;
-    }
-  }, [authUser?.sessionId, authUser?.token, normalizeSession, persistSession]);
-
-  const disconnectLastfm = useCallback(async () => {
-    if (!authUser?.token || authUser.token === 'guest-local') return false;
-    try {
-      const response = await fetch(`${API_URL}/auth/lastfm/disconnect`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${authUser.token}`,
-          'x-session-id': authUser.sessionId || ''
-        }
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        setLastfmError(payload?.error || 'Falha ao desconectar Last.fm.');
-        return false;
-      }
-
-      setAuthUser((prev) => {
-        if (!prev) return prev;
-        const next = normalizeSession(
-          {
-            ...prev,
-            ...(payload.user || {})
-          },
-          {
-            lastfm: null,
-            lastfmConnectedAt: null,
-            musicProvider: payload?.user?.musicProvider || (prev.musicProvider === 'lastfm' ? (prev.spotify ? 'spotify' : null) : prev.musicProvider),
-            nowPlaying: prev.nowPlaying?.source === 'lastfm' ? null : prev.nowPlaying
-          }
-        );
-        persistSession(next);
-        return next;
-      });
-      setLastfmError('');
-      return true;
-    } catch {
-      setLastfmError('Falha ao desconectar Last.fm.');
-      return false;
-    }
-  }, [authUser?.sessionId, authUser?.token, normalizeSession, persistSession]);
-
-  const disconnectSpotify = useCallback(() => {
-    setAuthUser((prev) => {
-      if (!prev) return prev;
-      const next = normalizeSession(prev, {
-        spotify: null,
-        spotifyToken: '',
-        spotifyConnectedAt: null,
-        musicProvider: prev.musicProvider === 'spotify' ? (prev.lastfm ? 'lastfm' : null) : prev.musicProvider,
-        nowPlaying: prev.nowPlaying?.source === 'spotify' ? null : prev.nowPlaying
-      });
-      persistSession(next);
-      return next;
-    });
-    setSpotifyError('');
-    return true;
-  }, [normalizeSession, persistSession]);
+  }, [authUser?.spotifyToken]);
 
   return {
     authMode,
@@ -721,18 +472,10 @@ export function useAuthFlow() {
     quickEnter,
     logout,
     connectSpotify,
-    connectLastfm,
     applySpotifyToken,
     exchangeSpotifyCode,
-    exchangeLastfmCode,
     refreshSpotifyNowPlaying,
-    refreshLastfmNowPlaying,
-    completeMusicOnboarding,
-    disconnectLastfm,
-    disconnectSpotify,
     spotifyError,
-    spotifyConnecting,
-    lastfmError,
-    lastfmConnecting
+    spotifyConnecting
   };
 }

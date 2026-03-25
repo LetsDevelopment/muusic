@@ -21,7 +21,6 @@ import mapRoutes from './routes/map.js';
 import { createLocalAuthRouter } from './routes/localAuth.js';
 import { createPublicRouter } from './routes/public.js';
 import { createSpotifyRouter } from './routes/spotify.js';
-import { createLastFmRouter } from './routes/lastfm.js';
 import geolocationService from './services/geolocation.js';
 import accountSettingsService from './services/accountSettingsService.js';
 import trendingPlaybackService from './services/trendingPlaybackService.js';
@@ -29,7 +28,6 @@ import performanceService from './services/performanceService.js';
 import { createRealtimeClusterService } from './services/realtimeClusterService.js';
 import { createSocketRateLimiter } from './services/socketRateLimiter.js';
 import { createSpotifyApiService } from './services/spotifyApiService.js';
-import { createLastFmApiService } from './services/lastfmApiService.js';
 import { disconnectPrisma } from './services/db.js';
 import {
   determineRoleForNewUser,
@@ -76,8 +74,6 @@ const nanoid = customAlphabet('1234567890abcdefghijklmnopqrstuvwxyz', 24);
 const allowedOrigins = new Set([...FRONTEND_URLS, 'http://localhost:5173', 'http://127.0.0.1:5173']);
 const spotifyExchangeCodes = new Map();
 const SPOTIFY_EXCHANGE_TTL_MS = 2 * 60 * 1000;
-const lastfmExchangeCodes = new Map();
-const LASTFM_EXCHANGE_TTL_MS = 2 * 60 * 1000;
 const SOCKET_GEO_CELL_DEG = Math.max(1, Math.min(30, Number(process.env.SOCKET_GEO_CELL_DEG || 8)));
 const PRESENCE_PATCH_FLUSH_MS = Math.max(80, Math.min(1000, Number(process.env.PRESENCE_PATCH_FLUSH_MS || 350)));
 const ADMIN_EMAILS = new Set(
@@ -129,8 +125,6 @@ function toPresenceUserSummary(user) {
     id: user.id || '',
     name: user.name || 'Usuario',
     spotify: user.spotify || null,
-    lastfm: user.lastfm || null,
-    musicProvider: user.musicProvider || null,
     nowPlaying: user.nowPlaying || null,
     location: user.location || null,
     connectedAt: user.connectedAt || Date.now()
@@ -154,7 +148,7 @@ function sanitizeNowPlayingPayload(nowPlaying) {
     albumImage: nowPlaying.albumImage || null,
     artistImage: nowPlaying.artistImage || null,
     externalUrl: nowPlaying.externalUrl || null,
-    source: nowPlaying.source === 'lastfm' ? 'lastfm' : 'spotify',
+    source: 'spotify',
     updatedAt: Date.now()
   };
 }
@@ -253,10 +247,6 @@ const { fetchSpotifyNowPlaying, refreshSpotifyAccessToken, buildSpotifyBasicHead
   spotifyClientId: process.env.SPOTIFY_CLIENT_ID || '',
   spotifyClientSecret: process.env.SPOTIFY_CLIENT_SECRET || ''
   });
-const { getSession: getLastFmSession, getUserInfo: getLastFmUserInfo, getNowPlaying: getLastFmNowPlaying } = createLastFmApiService({
-  apiKey: process.env.LASTFM_API_KEY || '',
-  apiSecret: process.env.LASTFM_API_SECRET || ''
-});
 trendingPlaybackService.startBackgroundWorker({
   flushIntervalMs: Number(process.env.TRENDINGS_FLUSH_INTERVAL_MS || 8000),
   maxBatchSize: Number(process.env.TRENDINGS_BATCH_SIZE || 200)
@@ -267,15 +257,6 @@ function cleanupSpotifyExchangeCodes() {
   for (const [code, item] of spotifyExchangeCodes.entries()) {
     if (!item || Number(item.expiresAt || 0) <= now) {
       spotifyExchangeCodes.delete(code);
-    }
-  }
-}
-
-function cleanupLastFmExchangeCodes() {
-  const now = Date.now();
-  for (const [code, item] of lastfmExchangeCodes.entries()) {
-    if (!item || Number(item.expiresAt || 0) <= now) {
-      lastfmExchangeCodes.delete(code);
     }
   }
 }
@@ -360,24 +341,6 @@ app.use(
     cleanupSpotifyExchangeCodes,
     spotifyExchangeCodes,
     spotifyExchangeTtlMs: SPOTIFY_EXCHANGE_TTL_MS
-  })
-);
-
-app.use(
-  createLastFmRouter({
-    jwtSecret: JWT_SECRET,
-    frontendUrl: FRONTEND_URL,
-    lastfmCallbackUrl: process.env.LASTFM_CALLBACK_URL || `${FRONTEND_URL}/auth/lastfm/callback`,
-    readAuthSession,
-    sessionService,
-    userService,
-    getLastFmSession,
-    getLastFmUserInfo,
-    getLastFmNowPlaying,
-    cleanupLastFmExchangeCodes,
-    lastfmExchangeCodes,
-    lastfmExchangeTtlMs: LASTFM_EXCHANGE_TTL_MS,
-    lastfmApiKey: process.env.LASTFM_API_KEY || ''
   })
 );
 

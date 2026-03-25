@@ -20,24 +20,18 @@ model User {
   passwordHash            String
   displayName             String?
   avatarUrl               String?
-  spotifyId               String?  @unique
-  lastfmUsername          String?
-  lastfmSessionKey        String?
-  lastfmConnectedAt       DateTime?
-  musicProvider           String?
-  onboardingMusicCompleted Boolean @default(false)
-  latitude                Float?
-  longitude               Float?
-  createdAt               DateTime @default(now())
-  updatedAt               DateTime @updatedAt
-  nowPlaying              NowPlaying?
-  trendings               TrendingPlayback[]
-  sessions                Session[]
-  resetTokens             PasswordResetToken[]
+  spotifyId    String?  @unique
+  latitude     Float?
+  longitude    Float?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  nowPlaying   NowPlaying?
+  trendings    TrendingPlayback[]
+  sessions     Session[]
+  resetTokens  PasswordResetToken[]
 
   @@index([email])
   @@index([spotifyId])
-  @@index([lastfmUsername])
   @@index([createdAt, id])
   @@index([role, createdAt])
 }

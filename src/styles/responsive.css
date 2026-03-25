@@ -237,27 +237,4 @@
     margin-left: 0;
   }
 
-  .account-connections-grid,
-  .music-onboarding-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .music-onboarding-page {
-    padding: 16px;
-  }
-
-  .music-onboarding-shell {
-    padding: 20px;
-    border-radius: 18px;
-  }
-
-  .music-onboarding-header {
-    grid-template-columns: 1fr;
-  }
-
-  .music-provider-chip {
-    left: 16px;
-    right: 16px;
-    width: auto;
-  }
 }

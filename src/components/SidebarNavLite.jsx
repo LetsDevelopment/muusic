@@ -5,10 +5,9 @@ import muusicLogo from '../assets/logo-muusic.png';
 export default function SidebarNavLite({
   onProfileOpen,
   onLocationClick,
-  onMusicOpen,
-  musicConnected,
-  musicConnecting,
-  musicTooltip,
+  onSpotifyConnect,
+  spotifyConnected,
+  spotifyConnecting,
   chatOpen,
   onChatToggle,
   notificationsOpen,
@@ -135,10 +134,10 @@ export default function SidebarNavLite({
       <nav className="rail-nav rail-bottom">
         <button
           type="button"
-          className={musicConnected ? 'rail-btn spotify-connected' : 'rail-btn'}
-          aria-label="Conexões musicais"
-          onClick={onMusicOpen}
-          data-tooltip={musicTooltip || (musicConnected ? 'Música conectada' : musicConnecting ? 'Conectando música...' : 'Conectar música')}
+          className={spotifyConnected ? 'rail-btn spotify-connected' : 'rail-btn'}
+          aria-label="Conectar Spotify"
+          onClick={onSpotifyConnect}
+          data-tooltip={spotifyConnected ? 'Spotify conectado' : spotifyConnecting ? 'Conectando Spotify...' : 'Conectar Spotify'}
         >
           <Disc3 />
         </button>

@@ -74,11 +74,6 @@ class UserService {
       role: user.role === 'ADMIN' ? 'ADMIN' : 'USER',
       avatarUrl: user.avatarUrl || null,
       spotifyId: user.spotifyId || null,
-      lastfmUsername: user.lastfmUsername || null,
-      lastfmSessionKey: user.lastfmSessionKey || null,
-      lastfmConnectedAt: user.lastfmConnectedAt || null,
-      musicProvider: user.musicProvider || null,
-      onboardingMusicCompleted: Boolean(user.onboardingMusicCompleted),
       passwordHash: user.passwordHash,
       createdAt: user.createdAt
     };
@@ -113,12 +108,7 @@ class UserService {
           passwordHash: data.passwordHash,
           displayName: data.displayName || data.name || null,
           avatarUrl: data.avatarUrl || null,
-          spotifyId: data.spotifyId || null,
-          lastfmUsername: data.lastfmUsername || null,
-          lastfmSessionKey: data.lastfmSessionKey || null,
-          lastfmConnectedAt: data.lastfmConnectedAt || null,
-          musicProvider: data.musicProvider || null,
-          onboardingMusicCompleted: Boolean(data.onboardingMusicCompleted)
+          spotifyId: data.spotifyId || null
         }
       });
       return this.toAppUser(created);
@@ -134,11 +124,6 @@ class UserService {
       role: data.role === 'ADMIN' ? 'ADMIN' : 'USER',
       passwordHash: data.passwordHash,
       spotifyId: data.spotifyId || null,
-      lastfmUsername: data.lastfmUsername || null,
-      lastfmSessionKey: data.lastfmSessionKey || null,
-      lastfmConnectedAt: data.lastfmConnectedAt || null,
-      musicProvider: data.musicProvider || null,
-      onboardingMusicCompleted: Boolean(data.onboardingMusicCompleted),
       createdAt: new Date().toISOString()
     };
     users.push(user);
@@ -319,13 +304,6 @@ class UserService {
       if (typeof data.avatarUrl === 'string' || data.avatarUrl === null) payload.avatarUrl = data.avatarUrl;
       if (typeof data.passwordHash === 'string') payload.passwordHash = data.passwordHash;
       if (typeof data.spotifyId === 'string' || data.spotifyId === null) payload.spotifyId = data.spotifyId;
-      if (typeof data.lastfmUsername === 'string' || data.lastfmUsername === null) payload.lastfmUsername = data.lastfmUsername;
-      if (typeof data.lastfmSessionKey === 'string' || data.lastfmSessionKey === null) payload.lastfmSessionKey = data.lastfmSessionKey;
-      if (data.lastfmConnectedAt instanceof Date || typeof data.lastfmConnectedAt === 'string' || data.lastfmConnectedAt === null) {
-        payload.lastfmConnectedAt = data.lastfmConnectedAt ? new Date(data.lastfmConnectedAt) : null;
-      }
-      if (typeof data.musicProvider === 'string' || data.musicProvider === null) payload.musicProvider = data.musicProvider;
-      if (typeof data.onboardingMusicCompleted === 'boolean') payload.onboardingMusicCompleted = data.onboardingMusicCompleted;
       if (typeof nextRole === 'string') payload.role = nextRole;
 
       const updated = await prismaClient.user.update({
@@ -344,13 +322,6 @@ class UserService {
     if (typeof data.avatarUrl === 'string' || data.avatarUrl === null) users[index].avatarUrl = data.avatarUrl;
     if (typeof data.passwordHash === 'string') users[index].passwordHash = data.passwordHash;
     if (typeof data.spotifyId === 'string' || data.spotifyId === null) users[index].spotifyId = data.spotifyId;
-    if (typeof data.lastfmUsername === 'string' || data.lastfmUsername === null) users[index].lastfmUsername = data.lastfmUsername;
-    if (typeof data.lastfmSessionKey === 'string' || data.lastfmSessionKey === null) users[index].lastfmSessionKey = data.lastfmSessionKey;
-    if (data.lastfmConnectedAt instanceof Date || typeof data.lastfmConnectedAt === 'string' || data.lastfmConnectedAt === null) {
-      users[index].lastfmConnectedAt = data.lastfmConnectedAt ? new Date(data.lastfmConnectedAt).toISOString() : null;
-    }
-    if (typeof data.musicProvider === 'string' || data.musicProvider === null) users[index].musicProvider = data.musicProvider;
-    if (typeof data.onboardingMusicCompleted === 'boolean') users[index].onboardingMusicCompleted = data.onboardingMusicCompleted;
     if (typeof nextRole === 'string') users[index].role = nextRole;
 
     await this.writeJSON(users);

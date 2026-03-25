@@ -8,7 +8,6 @@ import RealFeedLite from './components/RealFeedLite';
 import EventFeedLite from './components/EventFeedLite';
 import MyAccountPage from './pages/MyAccountPage';
 import AuthPage from './components/AuthPage';
-import MusicOnboardingPage from './components/MusicOnboardingPage';
 import { MAPBOX_TOKEN } from './config/appConfig';
 import { buildSimulatedPoints, DESKTOP_PERF, MOBILE_PERF } from './lib/mapSimulation';
 import { readMapVisibility, saveMapVisibility, STORAGE_SESSION_KEY } from './lib/storage';
@@ -61,7 +60,6 @@ function buildRealtimeNowPlayingPayload(nowPlaying) {
     albumImage: nowPlaying.albumImage || null,
     artistImage: nowPlaying.artistImage || null,
     externalUrl: nowPlaying.externalUrl || null,
-    source: nowPlaying.source === 'lastfm' ? 'lastfm' : 'spotify',
     updatedAt: Date.now()
   };
 }
@@ -167,19 +165,11 @@ export default function App() {
     closeForgotMode,
     logout,
     connectSpotify,
-    connectLastfm,
     applySpotifyToken,
     exchangeSpotifyCode,
-    exchangeLastfmCode,
     refreshSpotifyNowPlaying,
-    refreshLastfmNowPlaying,
-    completeMusicOnboarding,
-    disconnectLastfm,
-    disconnectSpotify,
     spotifyError,
     spotifyConnecting,
-    lastfmError,
-    lastfmConnecting,
     setAuthUser
   } = useAuthFlow();
 
@@ -466,36 +456,27 @@ export default function App() {
     const url = new window.URL(window.location.href);
     const spotifyCode = url.searchParams.get('spotify_code');
     const spotifyToken = url.searchParams.get('spotify_token');
-    const lastfmCode = url.searchParams.get('lastfm_code');
-    if (!spotifyCode && !spotifyToken && !lastfmCode) return;
+    if (!spotifyCode && !spotifyToken) return;
 
-    const consume = spotifyCode
-      ? exchangeSpotifyCode(spotifyCode)
-      : lastfmCode
-        ? exchangeLastfmCode(lastfmCode)
-        : applySpotifyToken(spotifyToken);
-    Promise.resolve(consume).finally(() => {
+    const consume = spotifyCode ? exchangeSpotifyCode(spotifyCode) : applySpotifyToken(spotifyToken);
+    consume.finally(() => {
       url.searchParams.delete('spotify_code');
       url.searchParams.delete('spotify_token');
       url.searchParams.delete('spotify_connected');
-      url.searchParams.delete('lastfm_code');
-      url.searchParams.delete('lastfm_connected');
-      url.searchParams.delete('lastfm_error');
       url.searchParams.delete('room');
       url.searchParams.delete('user');
       window.history.replaceState({}, '', `${url.pathname}${url.search}`);
     });
-  }, [activeUser, applySpotifyToken, exchangeLastfmCode, exchangeSpotifyCode]);
+  }, [activeUser, applySpotifyToken, exchangeSpotifyCode]);
 
   useEffect(() => {
-    const activeProvider = activeUser?.musicProvider || (activeUser?.lastfm ? 'lastfm' : activeUser?.spotifyToken ? 'spotify' : null);
-    if (!activeProvider) return undefined;
+    if (!activeUser?.spotifyToken) return undefined;
     let cancelled = false;
     let timerId = null;
 
     const schedule = (delay) => {
       timerId = window.setTimeout(async () => {
-        const nowPlaying = activeProvider === 'lastfm' ? await refreshLastfmNowPlaying() : await refreshSpotifyNowPlaying();
+        const nowPlaying = await refreshSpotifyNowPlaying();
         if (cancelled) return;
         if (joined && socketRef.current) {
           socketRef.current.emit('playback:update', {
@@ -506,7 +487,7 @@ export default function App() {
       }, delay);
     };
 
-    Promise.resolve(activeProvider === 'lastfm' ? refreshLastfmNowPlaying() : refreshSpotifyNowPlaying())
+    refreshSpotifyNowPlaying()
       .then((nowPlaying) => {
         if (!cancelled) {
           if (joined && socketRef.current) {
@@ -527,7 +508,7 @@ export default function App() {
       cancelled = true;
       if (timerId) window.clearTimeout(timerId);
     };
-  }, [activeUser?.lastfm, activeUser?.musicProvider, activeUser?.spotifyToken, refreshLastfmNowPlaying, refreshSpotifyNowPlaying, joined, socketRef]);
+  }, [activeUser?.spotifyToken, refreshSpotifyNowPlaying, joined, socketRef]);
 
   useEffect(() => {
     if (!joined || !socketRef.current) return;
@@ -624,11 +605,11 @@ export default function App() {
     }
   }, [mapUsers, activeUser?.id, focusFeedItem, accountSettings.city, socketRef]);
 
-  const musicIsPlaying = Boolean(activeUser?.nowPlaying?.isPlaying);
-  const currentTrackName = activeUser?.nowPlaying?.trackName || '';
-  const currentArtistName = activeUser?.nowPlaying?.artistName || activeUser?.nowPlaying?.artists || 'Artista indisponivel';
-  const hasActiveTrack = Boolean(currentTrackName);
-  const useMarqueeTitle = currentTrackName.length > 34;
+  const spotifyIsPlaying = Boolean(activeUser?.nowPlaying?.isPlaying);
+  const spotifyTrackName = activeUser?.nowPlaying?.trackName || '';
+  const spotifyArtistName = activeUser?.nowPlaying?.artistName || activeUser?.nowPlaying?.artists || 'Artista indisponivel';
+  const hasActiveTrack = Boolean(spotifyTrackName);
+  const useMarqueeTitle = spotifyTrackName.length > 34;
 
   useEffect(() => {
     const nowPlaying = activeUser?.nowPlaying || null;
@@ -779,31 +760,8 @@ export default function App() {
           onBack={() => navigateTo('/')}
           onLogout={handleLogout}
           onSettingsChange={setAccountSettings}
-          onSpotifyConnect={connectSpotify}
-          onSpotifyDisconnect={disconnectSpotify}
-          onLastfmConnect={connectLastfm}
-          onLastfmDisconnect={disconnectLastfm}
-          spotifyConnecting={spotifyConnecting}
-          lastfmConnecting={lastfmConnecting}
         />
       </div>
-    );
-  }
-
-  if (!activeUser?.onboardingMusicCompleted) {
-    return (
-      <MusicOnboardingPage
-        authUser={activeUser}
-        onConnectLastfm={connectLastfm}
-        onConnectSpotify={() => connectSpotify('duo-room')}
-        onSkip={async () => {
-          await completeMusicOnboarding(true);
-        }}
-        lastfmConnecting={lastfmConnecting}
-        spotifyConnecting={spotifyConnecting}
-        lastfmError={lastfmError}
-        spotifyError={spotifyError}
-      />
     );
   }
 
@@ -834,16 +792,9 @@ export default function App() {
       <SidebarNavLite
         onProfileOpen={() => navigateTo(ACCOUNT_PATH)}
         onLocationClick={handleLocateCurrentUser}
-        onMusicOpen={() => navigateTo(ACCOUNT_PATH)}
-        musicConnected={Boolean(activeUser?.lastfm || activeUser?.spotify)}
-        musicConnecting={Boolean(lastfmConnecting || spotifyConnecting)}
-        musicTooltip={
-          activeUser?.lastfm
-            ? `Música conectada via Last.fm (${activeUser.lastfm.username})`
-            : activeUser?.spotify
-              ? 'Spotify conectado'
-              : 'Conectar música'
-        }
+        onSpotifyConnect={() => connectSpotify('duo-room')}
+        spotifyConnected={Boolean(activeUser?.spotify)}
+        spotifyConnecting={spotifyConnecting}
         chatOpen={chatPanelOpen}
         onChatToggle={() => {
           setChatPanelOpen((prev) => {
@@ -863,12 +814,6 @@ export default function App() {
         mapVisibility={mapVisibility}
         onMapVisibilityChange={setMapVisibility}
       />
-
-      {!activeUser?.lastfm ? (
-        <button type="button" className="music-provider-chip" onClick={() => navigateTo(ACCOUNT_PATH)}>
-          Conecte o Last.fm para aparecer ouvindo em tempo real
-        </button>
-      ) : null}
 
       <ChatListLite open={chatPanelOpen} onToggle={() => setChatPanelOpen((prev) => !prev)} openChatRequest={chatOpenRequest} onUserClick={openUserProfileDetail} />
       <NotificationsListLite open={notificationsPanelOpen} onToggle={() => setNotificationsPanelOpen(false)} />
@@ -907,12 +852,12 @@ export default function App() {
       />
 
       <div className="now-playing-card">
-        {hasActiveTrack ? (
+        {activeUser?.spotify && hasActiveTrack ? (
           <div className="now-playing-content">
             {activeUser?.nowPlaying?.artistImage || activeUser?.nowPlaying?.albumImage || activeUser?.spotify?.image ? (
               <img
-                src={activeUser.nowPlaying.artistImage || activeUser.nowPlaying.albumImage || activeUser?.spotify?.image}
-                alt={currentArtistName || currentTrackName}
+                src={activeUser.nowPlaying.artistImage || activeUser.nowPlaying.albumImage || activeUser.spotify.image}
+                alt={spotifyArtistName || spotifyTrackName}
                 className="now-playing-cover"
               />
             ) : (
@@ -921,13 +866,13 @@ export default function App() {
               </div>
             )}
             <div className="now-playing-copy">
-              <div className={musicIsPlaying ? 'spotify-eq is-playing' : 'spotify-eq'} aria-hidden="true">
+              <div className={spotifyIsPlaying ? 'spotify-eq is-playing' : 'spotify-eq'} aria-hidden="true">
                 <span />
                 <span />
                 <span />
               </div>
               <p className={useMarqueeTitle ? 'now-playing-title marquee' : 'now-playing-title'}>
-                <span>{currentTrackName}</span>
+                <span>{spotifyTrackName}</span>
               </p>
               <button
                 type="button"
@@ -935,7 +880,7 @@ export default function App() {
                 onClick={() =>
                   openArtistDetail({
                     artistId: activeUser?.nowPlaying?.artistId,
-                    name: currentArtistName,
+                    name: spotifyArtistName,
                     artistImage: activeUser?.nowPlaying?.artistImage,
                     albumImage: activeUser?.nowPlaying?.albumImage,
                     heroImage: activeUser?.nowPlaying?.artistImage || activeUser?.nowPlaying?.albumImage || activeUser?.spotify?.image || null
@@ -943,7 +888,7 @@ export default function App() {
                 }
                 disabled={isMobileDevice}
               >
-                {currentArtistName}
+                {spotifyArtistName}
               </button>
             </div>
           </div>
@@ -957,8 +902,8 @@ export default function App() {
               </div>
             )}
             <div className="now-playing-copy">
-              <p className="now-playing-title">Conectar sua música</p>
-              <p className="now-playing-empty">Abra Minha conta para conectar Last.fm ou Spotify.</p>
+              <p className="now-playing-title">Conectar ao Spotify</p>
+              <p className="now-playing-empty">Clique no icone do Spotify na barra lateral.</p>
             </div>
           </div>
         )}
@@ -968,9 +913,7 @@ export default function App() {
         <p>FPS: {fps}</p>
         <p>{isMobileDevice ? 'Modo mobile otimizado ativo' : 'Modo desktop padrão'}</p>
         {activeUser?.spotify?.display_name && <p>Spotify: {activeUser.spotify.display_name}</p>}
-        {activeUser?.lastfm?.username && <p>Last.fm: {activeUser.lastfm.username}</p>}
         {spotifyError && <p>{spotifyError}</p>}
-        {lastfmError && <p>{lastfmError}</p>}
         <button type="button" className="bench-btn" onClick={runBenchmark} disabled={benchmarkRunning}>
           {benchmarkRunning ? 'Benchmark em execução...' : 'Rodar benchmark (60s)'}
         </button>
