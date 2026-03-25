@@ -52,14 +52,28 @@
     height: min(52vh, 420px);
   }
 
-  .now-playing-card {
+  .now-playing-dock {
     left: 12px;
     right: 12px;
     width: auto;
     max-width: calc(100vw - 24px);
-    min-width: 0;
-    bottom: 12px;
     top: auto;
+    bottom: 12px;
+    transform: none;
+  }
+
+  .now-playing-dock-body {
+    grid-template-columns: 56px minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .now-playing-dock-cover {
+    width: 56px;
+    height: 56px;
+  }
+
+  .now-playing-dock-title {
+    font-size: 16px;
   }
 
   .perf-box {

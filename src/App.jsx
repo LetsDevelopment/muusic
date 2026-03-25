@@ -6,6 +6,7 @@ import LiveNotificationToastLite from './components/LiveNotificationToastLite';
 import GlobalSearchLite from './components/GlobalSearchLite';
 import RealFeedLite from './components/RealFeedLite';
 import EventFeedLite from './components/EventFeedLite';
+import NowPlayingDock from './components/NowPlayingDock';
 import MyAccountPage from './pages/MyAccountPage';
 import AuthPage from './components/AuthPage';
 import { MAPBOX_TOKEN } from './config/appConfig';
@@ -895,63 +896,25 @@ export default function App() {
         onToggleCollapse={() => setRightPanelCollapsed((prev) => !prev)}
       />
 
-      <div className="now-playing-card">
-        {hasActiveTrack ? (
-          <div className="now-playing-content">
-            {activeUser?.nowPlaying?.artistImage || activeUser?.nowPlaying?.albumImage || activeUser?.spotify?.image ? (
-              <img
-                src={activeUser.nowPlaying.artistImage || activeUser.nowPlaying.albumImage || activeUser?.spotify?.image}
-                alt={spotifyArtistName || spotifyTrackName}
-                className="now-playing-cover"
-              />
-            ) : (
-              <div className="now-playing-cover now-playing-cover-fallback" aria-hidden="true">
-                ♪
-              </div>
-            )}
-            <div className="now-playing-copy">
-              <div className={spotifyIsPlaying ? 'spotify-eq is-playing' : 'spotify-eq'} aria-hidden="true">
-                <span />
-                <span />
-                <span />
-              </div>
-              <p className={useMarqueeTitle ? 'now-playing-title marquee' : 'now-playing-title'}>
-                <span>{spotifyTrackName}</span>
-              </p>
-              <button
-                type="button"
-                className={isMobileDevice ? 'now-playing-artist' : 'now-playing-artist now-playing-artist-button'}
-                onClick={() =>
-                  openArtistDetail({
-                    artistId: activeUser?.nowPlaying?.artistId,
-                    name: spotifyArtistName,
-                    artistImage: activeUser?.nowPlaying?.artistImage,
-                    albumImage: activeUser?.nowPlaying?.albumImage,
-                    heroImage: activeUser?.nowPlaying?.artistImage || activeUser?.nowPlaying?.albumImage || activeUser?.spotify?.image || null
-                  })
-                }
-                disabled={isMobileDevice}
-              >
-                {spotifyArtistName}
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="now-playing-content">
-            {activeUser?.spotify?.image ? (
-              <img src={activeUser.spotify.image} alt={activeUser.spotify.display_name || 'Spotify'} className="now-playing-cover" />
-            ) : (
-              <div className="now-playing-cover now-playing-cover-fallback" aria-hidden="true">
-                ♪
-              </div>
-            )}
-            <div className="now-playing-copy">
-              <p className="now-playing-title">Conectar ao Spotify</p>
-              <p className="now-playing-empty">Clique no ícone do Spotify ou ative o sync do Spotify Web em Minha Conta.</p>
-            </div>
-          </div>
-        )}
-      </div>
+      <NowPlayingDock
+        hasActiveTrack={hasActiveTrack}
+        trackName={spotifyTrackName}
+        artistName={spotifyArtistName}
+        isPlaying={spotifyIsPlaying}
+        coverImage={activeUser?.nowPlaying?.artistImage || activeUser?.nowPlaying?.albumImage || null}
+        fallbackImage={activeUser?.spotify?.image || null}
+        useMarqueeTitle={useMarqueeTitle}
+        isMobileDevice={isMobileDevice}
+        onArtistClick={() =>
+          openArtistDetail({
+            artistId: activeUser?.nowPlaying?.artistId,
+            name: spotifyArtistName,
+            artistImage: activeUser?.nowPlaying?.artistImage,
+            albumImage: activeUser?.nowPlaying?.albumImage,
+            heroImage: activeUser?.nowPlaying?.artistImage || activeUser?.nowPlaying?.albumImage || activeUser?.spotify?.image || null
+          })
+        }
+      />
 
       <div className="perf-box">
         <p>FPS: {fps}</p>
