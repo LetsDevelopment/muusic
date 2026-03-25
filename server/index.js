@@ -203,6 +203,16 @@ const io = new Server(httpServer, {
   perMessageDeflate: false
 });
 
+const bridgePushCors = cors({
+  origin: true,
+  credentials: false,
+  methods: ['POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type']
+});
+
+app.options('/api/bridge/push', bridgePushCors);
+app.use('/api/bridge/push', bridgePushCors);
+
 if (!isProduction) {
   app.use(cors({ origin: true, credentials: true }));
 } else {
