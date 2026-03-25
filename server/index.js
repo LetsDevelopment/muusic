@@ -344,6 +344,7 @@ app.use(
     frontendUrl: FRONTEND_URL,
     nanoid,
     randomBytes,
+    userService,
     readAuthSession,
     sessionService,
     trendingPlaybackService,

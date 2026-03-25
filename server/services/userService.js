@@ -32,6 +32,57 @@ function deriveUsername(name, email) {
   return `user_${Date.now().toString().slice(-6)}`;
 }
 
+function normalizeTrackKey(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+function formatHistoryDate(value) {
+  const date = value ? new Date(value) : new Date();
+  if (Number.isNaN(date.getTime())) return '';
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  }).format(date);
+}
+
+function buildHistoryCover(entry, index) {
+  if (entry?.albumImageUrl) return entry.albumImageUrl;
+  return `https://picsum.photos/seed/user-history-${index + 1}/200/200`;
+}
+
+function mapMusicHistoryEntry(entry, index = 0) {
+  return {
+    id: entry.id || `history-${index + 1}`,
+    title: entry.trackName || 'Faixa desconhecida',
+    artist: entry.artistName || 'Artista nao informado',
+    date: formatHistoryDate(entry.playedAt || entry.createdAt || new Date()),
+    cover: buildHistoryCover(entry, index),
+    playedAt: entry.playedAt ? new Date(entry.playedAt).toISOString() : null,
+    source: entry.source || 'spotify',
+    bridgeMode: entry.bridgeMode || null,
+    externalUrl: entry.externalUrl || null
+  };
+}
+
+function buildMusicProfileFromEntries(entries = [], recentLimit = 6) {
+  const musicHistory = entries.map((entry, index) => mapMusicHistoryEntry(entry, index));
+  const recentTracks = entries
+    .map((entry) => entry?.trackName || '')
+    .filter(Boolean)
+    .filter((track, index, array) => array.indexOf(track) === index)
+    .slice(0, recentLimit);
+
+  return {
+    recentTracks,
+    musicHistory
+  };
+}
+
 class UserService {
   constructor() {
     this.localUsersCache = null;
@@ -78,6 +129,8 @@ class UserService {
       spotifyBridgeConnectedAt: user.spotifyBridgeConnectedAt
         ? new Date(user.spotifyBridgeConnectedAt).toISOString()
         : null,
+      recentTracks: Array.isArray(user.recentTracks) ? user.recentTracks : [],
+      musicHistory: Array.isArray(user.musicHistory) ? user.musicHistory : [],
       passwordHash: user.passwordHash,
       createdAt: user.createdAt
     };
@@ -499,6 +552,188 @@ class UserService {
     record.revokedAt = new Date().toISOString();
     this.bridgeDeviceSessions.set(id, record);
     return record;
+  }
+
+  async getUserMusicProfile(userId, { limit = 12, recentLimit = 6 } = {}) {
+    const prismaClient = await getPrisma();
+    if (prismaClient) {
+      const rows = await prismaClient.userMusicHistory.findMany({
+        where: { userId },
+        orderBy: { playedAt: 'desc' },
+        take: limit
+      });
+      return buildMusicProfileFromEntries(rows, recentLimit);
+    }
+
+    const users = await this.readJSON();
+    const user = users.find((item) => item.id === userId);
+    const rows = Array.isArray(user?.musicHistory)
+      ? user.musicHistory
+          .slice()
+          .sort((a, b) => String(b.playedAt || '').localeCompare(String(a.playedAt || '')))
+          .slice(0, limit)
+      : [];
+    return buildMusicProfileFromEntries(rows, recentLimit);
+  }
+
+  async upsertNowPlayingForUser({ userId, trackId, trackName, artistName, albumImageUrl, source, bridgeMode, externalUrl, latitude = null, longitude = null }) {
+    const safeTrackName = String(trackName || '').trim();
+    const safeArtistName = String(artistName || '').trim();
+    if (!safeTrackName && !safeArtistName) return null;
+
+    const prismaClient = await getPrisma();
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+    if (prismaClient) {
+      return prismaClient.nowPlaying.upsert({
+        where: { userId },
+        update: {
+          spotifyTrackId: trackId || null,
+          trackName: safeTrackName,
+          artistName: safeArtistName,
+          albumImageUrl: albumImageUrl || null,
+          source: source || 'spotify',
+          bridgeMode: bridgeMode || null,
+          externalUrl: externalUrl || null,
+          latitude,
+          longitude,
+          startedAt: new Date(),
+          expiresAt
+        },
+        create: {
+          userId,
+          spotifyTrackId: trackId || null,
+          trackName: safeTrackName,
+          artistName: safeArtistName,
+          albumImageUrl: albumImageUrl || null,
+          source: source || 'spotify',
+          bridgeMode: bridgeMode || null,
+          externalUrl: externalUrl || null,
+          latitude,
+          longitude,
+          expiresAt
+        }
+      });
+    }
+
+    const users = await this.readJSON();
+    const index = users.findIndex((item) => item.id === userId);
+    if (index === -1) return null;
+    users[index].nowPlayingRecord = {
+      spotifyTrackId: trackId || null,
+      trackName: safeTrackName,
+      artistName: safeArtistName,
+      albumImageUrl: albumImageUrl || null,
+      source: source || 'spotify',
+      bridgeMode: bridgeMode || null,
+      externalUrl: externalUrl || null,
+      latitude,
+      longitude,
+      startedAt: new Date().toISOString(),
+      expiresAt: expiresAt.toISOString()
+    };
+    await this.writeJSON(users);
+    return users[index].nowPlayingRecord;
+  }
+
+  async clearNowPlayingForUser(userId) {
+    const prismaClient = await getPrisma();
+    if (prismaClient) {
+      await prismaClient.nowPlaying.deleteMany({ where: { userId } });
+      return;
+    }
+
+    const users = await this.readJSON();
+    const index = users.findIndex((item) => item.id === userId);
+    if (index === -1) return;
+    delete users[index].nowPlayingRecord;
+    await this.writeJSON(users);
+  }
+
+  async recordUserMusicHistory({ userId, trackId, trackName, artistName, albumImageUrl, source, bridgeMode, externalUrl, playedAt = new Date() }) {
+    const safeTrackName = String(trackName || '').trim();
+    const safeArtistName = String(artistName || '').trim();
+    if (!safeTrackName && !safeArtistName) return null;
+
+    const normalizedTrackKey = normalizeTrackKey(trackId || safeTrackName);
+    const normalizedArtistKey = normalizeTrackKey(safeArtistName);
+    const compareThreshold = Date.now() - 15 * 60 * 1000;
+    const prismaClient = await getPrisma();
+    if (prismaClient) {
+      const latest = await prismaClient.userMusicHistory.findFirst({
+        where: { userId },
+        orderBy: { playedAt: 'desc' }
+      });
+
+      const sameAsLatest =
+        latest &&
+        normalizeTrackKey(latest.spotifyTrackId || latest.trackName) === normalizedTrackKey &&
+        normalizeTrackKey(latest.artistName) === normalizedArtistKey &&
+        Number(new Date(latest.playedAt).getTime()) >= compareThreshold;
+
+      if (sameAsLatest) {
+        return prismaClient.userMusicHistory.update({
+          where: { id: latest.id },
+          data: {
+            playedAt: playedAt instanceof Date ? playedAt : new Date(playedAt),
+            albumImageUrl: albumImageUrl || latest.albumImageUrl || null,
+            source: source || latest.source || 'spotify',
+            bridgeMode: bridgeMode || latest.bridgeMode || null,
+            externalUrl: externalUrl || latest.externalUrl || null
+          }
+        });
+      }
+
+      return prismaClient.userMusicHistory.create({
+        data: {
+          userId,
+          spotifyTrackId: trackId || null,
+          trackName: safeTrackName,
+          artistName: safeArtistName,
+          albumImageUrl: albumImageUrl || null,
+          source: source || 'spotify',
+          bridgeMode: bridgeMode || null,
+          externalUrl: externalUrl || null,
+          playedAt: playedAt instanceof Date ? playedAt : new Date(playedAt)
+        }
+      });
+    }
+
+    const users = await this.readJSON();
+    const index = users.findIndex((item) => item.id === userId);
+    if (index === -1) return null;
+    const history = Array.isArray(users[index].musicHistory) ? users[index].musicHistory.slice() : [];
+    const latest = history[0] || null;
+    const sameAsLatest =
+      latest &&
+      normalizeTrackKey(latest.spotifyTrackId || latest.trackName) === normalizedTrackKey &&
+      normalizeTrackKey(latest.artistName) === normalizedArtistKey &&
+      Number(new Date(latest.playedAt).getTime()) >= compareThreshold;
+
+    if (sameAsLatest) {
+      latest.playedAt = playedAt instanceof Date ? playedAt.toISOString() : new Date(playedAt).toISOString();
+      latest.albumImageUrl = albumImageUrl || latest.albumImageUrl || null;
+      latest.source = source || latest.source || 'spotify';
+      latest.bridgeMode = bridgeMode || latest.bridgeMode || null;
+      latest.externalUrl = externalUrl || latest.externalUrl || null;
+      history[0] = latest;
+    } else {
+      history.unshift({
+        id: `history-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
+        spotifyTrackId: trackId || null,
+        trackName: safeTrackName,
+        artistName: safeArtistName,
+        albumImageUrl: albumImageUrl || null,
+        source: source || 'spotify',
+        bridgeMode: bridgeMode || null,
+        externalUrl: externalUrl || null,
+        playedAt: playedAt instanceof Date ? playedAt.toISOString() : new Date(playedAt).toISOString(),
+        createdAt: new Date().toISOString()
+      });
+    }
+
+    users[index].musicHistory = history.slice(0, 50);
+    await this.writeJSON(users);
+    return users[index].musicHistory[0];
   }
 }
 

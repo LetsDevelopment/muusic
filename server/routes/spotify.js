@@ -7,6 +7,7 @@ export function createSpotifyRouter({
   frontendUrl,
   nanoid,
   randomBytes,
+  userService,
   readAuthSession,
   sessionService,
   trendingPlaybackService,
@@ -22,6 +23,44 @@ export function createSpotifyRouter({
   spotifyExchangeTtlMs
 }) {
   const router = Router();
+
+  async function getMusicProfile(userId) {
+    return userId ? userService.getUserMusicProfile(userId) : { recentTracks: [], musicHistory: [] };
+  }
+
+  async function persistMusicState(userId, nowPlaying) {
+    if (!userId) return { recentTracks: [], musicHistory: [] };
+    if (nowPlaying?.trackName && nowPlaying?.artistName) {
+      await Promise.all([
+        userService.upsertNowPlayingForUser({
+          userId,
+          trackId: nowPlaying.trackId || null,
+          trackName: nowPlaying.trackName,
+          artistName: nowPlaying.artistName,
+          albumImageUrl: nowPlaying.albumImage || null,
+          source: 'spotify',
+          bridgeMode: null,
+          externalUrl: nowPlaying.externalUrl || null
+        }),
+        nowPlaying.isPlaying
+          ? userService.recordUserMusicHistory({
+              userId,
+              trackId: nowPlaying.trackId || null,
+              trackName: nowPlaying.trackName,
+              artistName: nowPlaying.artistName,
+              albumImageUrl: nowPlaying.albumImage || null,
+              source: 'spotify',
+              bridgeMode: null,
+              externalUrl: nowPlaying.externalUrl || null,
+              playedAt: new Date()
+            })
+          : Promise.resolve(null)
+      ]);
+    } else {
+      await userService.clearNowPlayingForUser(userId);
+    }
+    return getMusicProfile(userId);
+  }
 
   function formatDuration(durationMs) {
     const totalSeconds = Math.max(0, Math.floor(Number(durationMs || 0) / 1000));
@@ -140,6 +179,7 @@ export function createSpotifyRouter({
         image: profileRes.data.images?.[0]?.url || null
       };
       const nowPlaying = await fetchSpotifyNowPlaying(accessToken);
+      await persistMusicState(decoded.userId, nowPlaying);
       if (nowPlaying?.isPlaying && nowPlaying?.trackName && nowPlaying?.artistName) {
         try {
           await trendingPlaybackService.enqueuePlayback({
@@ -211,7 +251,7 @@ export function createSpotifyRouter({
     }
   });
 
-  router.get('/auth/spotify/me', (req, res) => {
+  router.get('/auth/spotify/me', async (req, res) => {
     const authHeader = req.headers.authorization || '';
     const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
     if (!token) return res.status(401).json({ error: 'Missing token' });
@@ -226,7 +266,8 @@ export function createSpotifyRouter({
         roomId: payload.roomId,
         spotify: payload.spotify,
         nowPlaying: payload.nowPlaying || null,
-        tokenExpiresAt: payload.tokenExpiresAt || null
+        tokenExpiresAt: payload.tokenExpiresAt || null,
+        ...(await getMusicProfile(payload.userId))
       });
     } catch {
       return res.status(401).json({ error: 'Invalid token' });
@@ -260,6 +301,7 @@ export function createSpotifyRouter({
       }
 
       const nowPlaying = await fetchSpotifyNowPlaying(accessToken);
+      const musicProfile = await persistMusicState(payload.userId, nowPlaying);
       if (nowPlaying?.isPlaying && nowPlaying?.trackName && nowPlaying?.artistName) {
         try {
           await trendingPlaybackService.enqueuePlayback({
@@ -276,7 +318,10 @@ export function createSpotifyRouter({
         }
       }
 
-      const response = { nowPlaying };
+      const response = {
+        nowPlaying,
+        ...musicProfile
+      };
       if (refreshToken && accessToken !== payload.accessToken) {
         response.spotifyToken = jwt.sign(
           {

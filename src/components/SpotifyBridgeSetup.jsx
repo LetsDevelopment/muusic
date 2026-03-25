@@ -207,12 +207,16 @@ export default function SpotifyBridgeSetup({ authPayload, initialConnectedAt = n
           parear o agente com o site e testar a leitura do app Spotify instalado.
         </p>
         <p className="account-bridge-hint">
-          Baixe o app macOS:
+          Baixe o agente macOS:
           {' '}
-          <a className="account-bridge-download" href="/downloads/Muusic%20Bridge.app.zip" download>
-            Muusic Bridge.app.zip
+          <a className="account-bridge-download" href="/downloads/muusic-bridge-macos.command" download>
+            muusic-bridge-macos.command
           </a>
-          {' '}e extraia o `.app` antes de abrir.
+          {' '}e{' '}
+          <a className="account-bridge-download" href="/downloads/muusic-bridge-macos.mjs" download>
+            muusic-bridge-macos.mjs
+          </a>
+          {' '}na mesma pasta, depois execute o `.command`.
         </p>
         <div className="account-bridge-actions">
           <button type="button" className="account-secondary-btn" onClick={handleDesktopSync} disabled={desktopLoading}>

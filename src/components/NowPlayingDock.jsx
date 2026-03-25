@@ -15,7 +15,7 @@ function NowPlayingDock({
   const bridgeNote =
     source === 'bridge'
       ? bridgeMode === 'desktop'
-        ? 'Dados sendo lidos do aplicativo Spotify instalado neste computador.'
+        ? 'Dados sendo lidos do aplicativo Spotify instalado neste computador, sem o login do usuário no muusic.'
         : 'Dados sendo lidos sem login do Spotify, somente do navegador.'
       : '';
 

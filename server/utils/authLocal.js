@@ -42,7 +42,9 @@ export function sanitizeUserResponse(user) {
     email: user.email,
     role: sanitizeRole(user.role),
     avatarUrl: user.avatarUrl || null,
-    spotifyBridgeConnectedAt: user.spotifyBridgeConnectedAt || null
+    spotifyBridgeConnectedAt: user.spotifyBridgeConnectedAt || null,
+    recentTracks: Array.isArray(user.recentTracks) ? user.recentTracks : [],
+    musicHistory: Array.isArray(user.musicHistory) ? user.musicHistory : []
   };
 }
 

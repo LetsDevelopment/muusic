@@ -28,6 +28,15 @@ export function createLocalAuthRouter({
 }) {
   const router = Router();
 
+  async function serializeUser(user) {
+    const musicProfile = user?.id ? await userService.getUserMusicProfile(user.id) : { recentTracks: [], musicHistory: [] };
+    return {
+      ...sanitizeUserResponse(user),
+      recentTracks: musicProfile.recentTracks,
+      musicHistory: musicProfile.musicHistory
+    };
+  }
+
   router.post('/auth/local/register', async (req, res) => {
     try {
       const parsed = parseRegisterInput(req.body);
@@ -52,7 +61,7 @@ export function createLocalAuthRouter({
       return res.status(201).json({
         token,
         sessionId,
-        user: sanitizeUserResponse(user)
+        user: await serializeUser(user)
       });
     } catch (error) {
       return res.status(500).json({ error: `Erro ao registrar: ${error.message}` });
@@ -79,7 +88,7 @@ export function createLocalAuthRouter({
       return res.json({
         token,
         sessionId,
-        user: sanitizeUserResponse(user)
+        user: await serializeUser(user)
       });
     } catch (error) {
       return res.status(500).json({ error: `Erro ao autenticar: ${error.message}` });
@@ -153,7 +162,7 @@ export function createLocalAuthRouter({
       const auth = await readAuthSession(req);
       if (auth.error) return res.status(401).json({ error: auth.error });
       return res.json({
-        user: sanitizeUserResponse(auth.user),
+        user: await serializeUser(auth.user),
         sessionId: auth.sessionId
       });
     } catch {

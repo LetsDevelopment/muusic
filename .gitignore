@@ -8,3 +8,5 @@ dist
 .DS_Store
 .env
 server/data/local-sessions.json
+public/downloads/Muusic Bridge.app.zip
+public/downloads/Muusic Bridge.app/

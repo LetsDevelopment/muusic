@@ -28,6 +28,7 @@ model User {
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
   nowPlaying              NowPlaying?
+  musicHistory            UserMusicHistory[]
   trendings               TrendingPlayback[]
   sessions                Session[]
   resetTokens             PasswordResetToken[]
@@ -107,10 +108,13 @@ model PasswordResetToken {
 model NowPlaying {
   id             String   @id @default(uuid())
   userId         String   @unique
-  spotifyTrackId String
+  spotifyTrackId String?
   trackName      String
   artistName     String
   albumImageUrl  String?
+  source         String   @default("spotify")
+  bridgeMode     String?
+  externalUrl    String?
   latitude       Float?
   longitude      Float?
   startedAt      DateTime @default(now())
@@ -119,6 +123,26 @@ model NowPlaying {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([expiresAt])
+  @@index([spotifyTrackId])
+}
+
+model UserMusicHistory {
+  id             String   @id @default(uuid())
+  userId         String
+  spotifyTrackId String?
+  trackName      String
+  artistName     String
+  albumImageUrl  String?
+  source         String   @default("spotify")
+  bridgeMode     String?
+  externalUrl    String?
+  playedAt       DateTime @default(now())
+  createdAt      DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, playedAt])
+  @@index([playedAt])
   @@index([spotifyTrackId])
 }
 

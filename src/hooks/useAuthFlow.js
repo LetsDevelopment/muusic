@@ -19,6 +19,33 @@ function isSameNowPlaying(prev, next) {
   );
 }
 
+function isSameStringArray(prev, next) {
+  const a = Array.isArray(prev) ? prev : [];
+  const b = Array.isArray(next) ? next : [];
+  if (a.length !== b.length) return false;
+  return a.every((item, index) => item === b[index]);
+}
+
+function isSameMusicHistory(prev, next) {
+  const a = Array.isArray(prev) ? prev : [];
+  const b = Array.isArray(next) ? next : [];
+  if (a.length !== b.length) return false;
+  return a.every((item, index) => {
+    const other = b[index] || {};
+    return (
+      item?.id === other?.id &&
+      item?.title === other?.title &&
+      item?.artist === other?.artist &&
+      item?.date === other?.date &&
+      item?.cover === other?.cover &&
+      item?.playedAt === other?.playedAt &&
+      item?.source === other?.source &&
+      item?.bridgeMode === other?.bridgeMode &&
+      item?.externalUrl === other?.externalUrl
+    );
+  });
+}
+
 export function useAuthFlow() {
   const [initialSession] = useState(() => readSessionUser());
   const [authMode, setAuthMode] = useState('login');
@@ -376,7 +403,9 @@ export function useAuthFlow() {
           spotify: payload.spotify || null,
           spotifyToken,
           spotifyConnectedAt: new Date().toISOString(),
-          nowPlaying: payload.nowPlaying || null
+          nowPlaying: payload.nowPlaying || null,
+          recentTracks: Array.isArray(payload.recentTracks) ? payload.recentTracks : prev.recentTracks || [],
+          musicHistory: Array.isArray(payload.musicHistory) ? payload.musicHistory : prev.musicHistory || []
         };
         localStorage.setItem(STORAGE_SESSION_KEY, JSON.stringify(next));
         return next;
@@ -436,13 +465,22 @@ export function useAuthFlow() {
         if (!prev) return prev;
         const nextNowPlaying = payload.nowPlaying || null;
         const nextSpotifyToken = payload.spotifyToken || prev.spotifyToken;
-        if (isSameNowPlaying(prev.nowPlaying || null, nextNowPlaying) && prev.spotifyToken === nextSpotifyToken) {
+        const nextRecentTracks = Array.isArray(payload.recentTracks) ? payload.recentTracks : prev.recentTracks || [];
+        const nextMusicHistory = Array.isArray(payload.musicHistory) ? payload.musicHistory : prev.musicHistory || [];
+        if (
+          isSameNowPlaying(prev.nowPlaying || null, nextNowPlaying) &&
+          prev.spotifyToken === nextSpotifyToken &&
+          isSameStringArray(prev.recentTracks || [], nextRecentTracks) &&
+          isSameMusicHistory(prev.musicHistory || [], nextMusicHistory)
+        ) {
           return prev;
         }
         const next = {
           ...prev,
           nowPlaying: nextNowPlaying,
-          spotifyToken: nextSpotifyToken
+          spotifyToken: nextSpotifyToken,
+          recentTracks: nextRecentTracks,
+          musicHistory: nextMusicHistory
         };
         localStorage.setItem(STORAGE_SESSION_KEY, JSON.stringify(next));
         return next;
@@ -471,12 +509,20 @@ export function useAuthFlow() {
       setAuthUser((prev) => {
         if (!prev) return prev;
         const nextNowPlaying = payload.nowPlaying || null;
-        if (isSameNowPlaying(prev.nowPlaying || null, nextNowPlaying)) {
+        const nextRecentTracks = Array.isArray(payload.recentTracks) ? payload.recentTracks : prev.recentTracks || [];
+        const nextMusicHistory = Array.isArray(payload.musicHistory) ? payload.musicHistory : prev.musicHistory || [];
+        if (
+          isSameNowPlaying(prev.nowPlaying || null, nextNowPlaying) &&
+          isSameStringArray(prev.recentTracks || [], nextRecentTracks) &&
+          isSameMusicHistory(prev.musicHistory || [], nextMusicHistory)
+        ) {
           return prev;
         }
         const next = {
           ...prev,
-          nowPlaying: nextNowPlaying
+          nowPlaying: nextNowPlaying,
+          recentTracks: nextRecentTracks,
+          musicHistory: nextMusicHistory
         };
         localStorage.setItem(STORAGE_SESSION_KEY, JSON.stringify(next));
         return next;

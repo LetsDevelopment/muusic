@@ -130,6 +130,62 @@ async function readPreferredBridgeNowPlaying(userId) {
 export function createBridgeRouter({ readAuthSession, userService, frontendUrl }) {
   const router = Router();
 
+  async function getMusicProfile(userId) {
+    return userId ? userService.getUserMusicProfile(userId) : { recentTracks: [], musicHistory: [] };
+  }
+
+  async function persistMusicState(userId, nowPlaying) {
+    if (!userId) return { recentTracks: [], musicHistory: [] };
+    if (nowPlaying?.trackName && nowPlaying?.artistName) {
+      await Promise.all([
+        userService.upsertNowPlayingForUser({
+          userId,
+          trackId: nowPlaying.trackId || null,
+          trackName: nowPlaying.trackName,
+          artistName: nowPlaying.artistName,
+          albumImageUrl: nowPlaying.albumImage || null,
+          source: 'bridge',
+          bridgeMode: nowPlaying.bridgeMode || 'browser',
+          externalUrl: nowPlaying.externalUrl || null
+        }),
+        nowPlaying.isPlaying
+          ? userService.recordUserMusicHistory({
+              userId,
+              trackId: nowPlaying.trackId || null,
+              trackName: nowPlaying.trackName,
+              artistName: nowPlaying.artistName,
+              albumImageUrl: nowPlaying.albumImage || null,
+              source: 'bridge',
+              bridgeMode: nowPlaying.bridgeMode || 'browser',
+              externalUrl: nowPlaying.externalUrl || null,
+              playedAt: new Date()
+            })
+          : Promise.resolve(null)
+      ]);
+    } else {
+      await userService.clearNowPlayingForUser(userId);
+    }
+    return getMusicProfile(userId);
+  }
+
+  async function syncPersistedNowPlayingFromPreferredBridge(userId) {
+    const preferredEntry = await readPreferredBridgeNowPlaying(userId);
+    if (preferredEntry?.nowPlaying?.trackName && preferredEntry?.nowPlaying?.artistName) {
+      await userService.upsertNowPlayingForUser({
+        userId,
+        trackId: preferredEntry.nowPlaying.trackId || null,
+        trackName: preferredEntry.nowPlaying.trackName,
+        artistName: preferredEntry.nowPlaying.artistName,
+        albumImageUrl: preferredEntry.nowPlaying.albumImage || null,
+        source: 'bridge',
+        bridgeMode: preferredEntry.nowPlaying.bridgeMode || 'browser',
+        externalUrl: preferredEntry.nowPlaying.externalUrl || null
+      });
+      return;
+    }
+    await userService.clearNowPlayingForUser(userId);
+  }
+
   router.get('/api/bridge/setup', async (req, res) => {
     const auth = await readAuthSession(req);
     if (auth.error) return res.status(401).json({ error: auth.error });
@@ -162,7 +218,11 @@ export function createBridgeRouter({ readAuthSession, userService, frontendUrl }
       spotifyBridgeKey: null,
       spotifyBridgeConnectedAt: null
     });
-    await clearBridgeNowPlaying(auth.user.id);
+    await Promise.all([
+      clearBridgeNowPlaying(auth.user.id, 'browser'),
+      clearBridgeNowPlaying(auth.user.id, 'desktop'),
+      userService.clearNowPlayingForUser(auth.user.id)
+    ]);
 
     return res.json({ ok: true });
   });
@@ -186,11 +246,13 @@ export function createBridgeRouter({ readAuthSession, userService, frontendUrl }
     const nowPlaying = normalizeBridgeNowPlaying(req.body || {});
     if (!nowPlaying) {
       await clearBridgeNowPlaying(userId, 'browser');
-      return res.json({ ok: true, nowPlaying: null });
+      await syncPersistedNowPlayingFromPreferredBridge(userId);
+      return res.json({ ok: true, nowPlaying: null, ...(await getMusicProfile(userId)) });
     }
 
     await writeBridgeNowPlaying(userId, nowPlaying);
-    return res.json({ ok: true, nowPlaying });
+    const musicProfile = await persistMusicState(userId, nowPlaying);
+    return res.json({ ok: true, nowPlaying, ...musicProfile });
   });
 
   router.options('/api/bridge/push', (req, res) => {
@@ -206,12 +268,13 @@ export function createBridgeRouter({ readAuthSession, userService, frontendUrl }
 
     const entry = await readPreferredBridgeNowPlaying(auth.user.id);
     if (!entry) {
-      return res.json({ nowPlaying: null });
+      return res.json({ nowPlaying: null, ...(await getMusicProfile(auth.user.id)) });
     }
 
     return res.json({
       nowPlaying: entry.nowPlaying || null,
-      updatedAt: entry.updatedAt || null
+      updatedAt: entry.updatedAt || null,
+      ...(await getMusicProfile(auth.user.id))
     });
   });
 
@@ -280,12 +343,14 @@ export function createBridgeRouter({ readAuthSession, userService, frontendUrl }
     });
     if (!nowPlaying) {
       await clearBridgeNowPlaying(session.userId, 'desktop');
-      return res.json({ ok: true, nowPlaying: null });
+      await syncPersistedNowPlayingFromPreferredBridge(session.userId);
+      return res.json({ ok: true, nowPlaying: null, ...(await getMusicProfile(session.userId)) });
     }
 
     await writeBridgeNowPlaying(session.userId, nowPlaying);
     await userService.touchBridgeDeviceSession(session.id);
-    return res.json({ ok: true, nowPlaying });
+    const musicProfile = await persistMusicState(session.userId, nowPlaying);
+    return res.json({ ok: true, nowPlaying, ...musicProfile });
   });
 
   return router;
