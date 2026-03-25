@@ -336,7 +336,6 @@ export default function UsersPage({ apiFetch }) {
                   {items.map((user) => {
                     const isExpanded = expandedUserId === user.id;
                     const music = user.music || {};
-                    const nowPlaying = music.nowPlaying || null;
                     const musicHistory = Array.isArray(music.musicHistory) ? music.musicHistory : [];
                     const bridgeDevices = Array.isArray(music.bridgeDevices) ? music.bridgeDevices : [];
 
