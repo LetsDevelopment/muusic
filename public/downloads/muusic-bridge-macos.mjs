@@ -103,21 +103,12 @@ async function installLaunchAgent() {
   await ensureLaunchAgentDir();
   await ensureLogDir();
   await writeFile(LAUNCH_AGENT_PATH, buildLaunchAgentPlist(), 'utf8');
-  try {
-    await execFileAsync('launchctl', ['unload', LAUNCH_AGENT_PATH], { timeout: 3000 });
-  } catch {
-    // The agent may not be loaded yet, which is fine for first install.
-  }
-  try {
-    await execFileAsync('launchctl', ['load', '-w', LAUNCH_AGENT_PATH], { timeout: 5000 });
-  } catch {
-    // If load fails here, the user can still open the app manually and inspect logs.
-  }
+  return LAUNCH_AGENT_PATH;
 }
 
 async function removeLaunchAgent() {
   try {
-    await execFileAsync('launchctl', ['unload', LAUNCH_AGENT_PATH], { timeout: 3000 });
+    await execFileAsync('launchctl', ['bootout', `gui/${process.getuid()}`, LAUNCH_AGENT_PATH], { timeout: 3000 });
   } catch {
     // Ignore unload failures during cleanup.
   }
