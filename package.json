@@ -7,7 +7,7 @@
     "dev": "concurrently \"npm:dev:server\" \"npm:dev:client\"",
     "dev:server": "node server/index.js",
     "dev:client": "vite",
-    "build": "vite build",
+    "build": "rm -rf dist && vite build",
     "preview": "vite preview",
     "start": "node server/index.js",
     "prisma:generate": "prisma generate",

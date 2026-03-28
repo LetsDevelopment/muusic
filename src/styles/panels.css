@@ -3007,7 +3007,18 @@
   padding-top: 18px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   display: grid;
+  gap: 16px;
+}
+
+.account-bridge-card {
+  display: grid;
   gap: 14px;
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    radial-gradient(circle at top left, rgba(29, 185, 84, 0.08), transparent 38%),
+    rgba(7, 10, 15, 0.82);
 }
 
 .account-bridge-head {
@@ -3049,6 +3060,16 @@
   color: #d7ffe6;
 }
 
+.account-bridge-status.is-warn {
+  background: rgba(255, 214, 102, 0.14);
+  color: #fff1c2;
+}
+
+.account-bridge-status.is-error {
+  background: rgba(255, 89, 120, 0.16);
+  color: #ffd7df;
+}
+
 .account-bridge-steps {
   margin: 0;
   padding-left: 18px;
@@ -3069,6 +3090,85 @@
 .account-bridge-bookmarklet {
   display: grid;
   gap: 10px;
+}
+
+.account-bridge-downloads {
+  display: grid;
+  gap: 10px;
+}
+
+.account-bridge-installer {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 18px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)),
+    rgba(10, 14, 20, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.account-bridge-installer-badge {
+  width: fit-content;
+  min-height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.08);
+  color: #e8eef8;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.account-bridge-installer-main {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.account-bridge-installer-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(29, 185, 84, 0.24), transparent 55%),
+    rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  flex: 0 0 auto;
+}
+
+.account-bridge-installer-icon img {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+}
+
+.account-bridge-installer-copy {
+  display: grid;
+  gap: 6px;
+}
+
+.account-bridge-installer-copy h4 {
+  margin: 0;
+  font-size: 20px;
+  color: #f4f6fb;
+}
+
+.account-bridge-installer-copy p {
+  margin: 0;
+  color: #aeb9c9;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.account-bridge-download-btn {
+  width: fit-content;
+  text-decoration: none;
 }
 
 .account-bridge-link {
@@ -3115,25 +3215,106 @@
 }
 
 .account-bridge-desktop {
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 0;
+}
+
+.account-bridge-meta {
   display: grid;
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
 }
 
-.account-bridge-desktop h4 {
-  margin: 0;
-  font-size: 13px;
+.account-bridge-install-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.account-bridge-step-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.account-bridge-step-index {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: rgba(29, 185, 84, 0.16);
+  color: #dbffe8;
+  font-size: 12px;
   font-weight: 700;
-  color: #eef2f8;
 }
 
-.account-bridge-desktop p {
+.account-bridge-step-card h5 {
+  margin: 0 0 4px;
+  color: #f1f5fb;
+  font-size: 14px;
+}
+
+.account-bridge-step-card p {
   margin: 0;
+  color: #a9b6c7;
   font-size: 12px;
   line-height: 1.5;
-  color: rgba(201, 213, 228, 0.82);
+}
+
+.account-bridge-meta-item {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.account-bridge-meta-label {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8fa0b7;
+}
+
+.account-bridge-meta-item strong {
+  color: #f1f5fb;
+  font-size: 13px;
+  line-height: 1.45;
+  font-weight: 600;
+}
+
+.account-bridge-checklist {
+  display: grid;
+  gap: 8px;
+}
+
+.account-bridge-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #b6c1d0;
+  font-size: 13px;
+}
+
+.account-bridge-check-done {
+  color: #eef7f1;
+}
+
+.account-bridge-check-mark {
+  width: 16px;
+  display: inline-flex;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.36);
+}
+
+.account-bridge-check-done .account-bridge-check-mark {
+  color: #3fe07d;
 }
 
 .account-history-head {

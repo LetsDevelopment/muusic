@@ -4,6 +4,7 @@ import redisService from '../services/redis.js';
 const FALLBACK_BRIDGE_STORE = new Map();
 const BRIDGE_TTL_SECONDS = 45;
 const BRIDGE_STALE_MS = 30_000;
+const DEVICE_ACTIVE_MS = 90_000;
 
 function normalizeBridgeMode(value) {
   return value === 'desktop' ? 'desktop' : 'browser';
@@ -116,6 +117,10 @@ function isFreshBridgeEntry(entry) {
   return Boolean(entry && Date.now() - Number(entry.updatedAt || 0) <= BRIDGE_STALE_MS);
 }
 
+function isActiveDeviceSession(session) {
+  return Boolean(session?.lastSeenAt && Date.now() - new Date(session.lastSeenAt).getTime() <= DEVICE_ACTIVE_MS);
+}
+
 async function readPreferredBridgeNowPlaying(userId) {
   const [desktopEntry, browserEntry] = await Promise.all([
     readBridgeNowPlaying(userId, 'desktop'),
@@ -187,8 +192,32 @@ export function createBridgeRouter({ readAuthSession, userService, frontendUrl, 
     };
   }
 
-  async function syncPersistedNowPlayingFromPreferredBridge(userId) {
+  async function readAndEnrichPreferredBridgeNowPlaying(userId) {
     const preferredEntry = await readPreferredBridgeNowPlaying(userId);
+    if (!preferredEntry?.nowPlaying) return null;
+
+    const enrichedNowPlaying = await enrichBridgeNowPlaying(preferredEntry.nowPlaying);
+    if (!enrichedNowPlaying) return preferredEntry;
+
+    const albumImageChanged = enrichedNowPlaying.albumImage !== preferredEntry.nowPlaying.albumImage;
+    const trackIdChanged = enrichedNowPlaying.trackId !== preferredEntry.nowPlaying.trackId;
+    const externalUrlChanged = enrichedNowPlaying.externalUrl !== preferredEntry.nowPlaying.externalUrl;
+
+    if (albumImageChanged || trackIdChanged || externalUrlChanged) {
+      const nextEntry = {
+        ...preferredEntry,
+        nowPlaying: enrichedNowPlaying,
+        updatedAt: Date.now()
+      };
+      await writeBridgeNowPlaying(userId, enrichedNowPlaying);
+      return nextEntry;
+    }
+
+    return preferredEntry;
+  }
+
+  async function syncPersistedNowPlayingFromPreferredBridge(userId) {
+    const preferredEntry = await readAndEnrichPreferredBridgeNowPlaying(userId);
     if (preferredEntry?.nowPlaying?.trackName && preferredEntry?.nowPlaying?.artistName) {
       await userService.upsertNowPlayingForUser({
         userId,
@@ -286,7 +315,7 @@ export function createBridgeRouter({ readAuthSession, userService, frontendUrl, 
     const auth = await readAuthSession(req);
     if (auth.error) return res.status(401).json({ error: auth.error });
 
-    const entry = await readPreferredBridgeNowPlaying(auth.user.id);
+    const entry = await readAndEnrichPreferredBridgeNowPlaying(auth.user.id);
     if (!entry) {
       return res.json({ nowPlaying: null, ...(await getMusicProfile(auth.user.id)) });
     }
@@ -324,13 +353,38 @@ export function createBridgeRouter({ readAuthSession, userService, frontendUrl, 
 
     const sessions = await userService.listBridgeDeviceSessionsByUserId(auth.user.id);
     return res.json({
+      activeDeviceCount: sessions.filter(isActiveDeviceSession).length,
+      latestSeenAt: sessions[0]?.lastSeenAt || null,
       devices: sessions.map((item) => ({
         id: item.id,
         deviceName: item.deviceName || 'Muusic Bridge Mac',
         platform: item.platform || 'macos',
         createdAt: item.createdAt,
-        lastSeenAt: item.lastSeenAt
+        lastSeenAt: item.lastSeenAt,
+        isActive: isActiveDeviceSession(item),
+        status: isActiveDeviceSession(item) ? 'online' : 'offline'
       }))
+    });
+  });
+
+  router.post('/api/bridge/device/heartbeat', async (req, res) => {
+    const authHeader = String(req.headers.authorization || '');
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+    if (!token) {
+      return res.status(401).json({ error: 'Missing device token' });
+    }
+
+    const session = await userService.findBridgeDeviceSessionByTokenHash(hashDeviceToken(token));
+    if (!session?.userId) {
+      return res.status(401).json({ error: 'Invalid device token' });
+    }
+
+    const touched = await userService.touchBridgeDeviceSession(session.id);
+    return res.json({
+      ok: true,
+      deviceId: session.id,
+      userId: session.userId,
+      lastSeenAt: touched?.lastSeenAt || new Date().toISOString()
     });
   });
 
