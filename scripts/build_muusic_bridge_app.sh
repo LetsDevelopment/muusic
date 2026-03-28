@@ -80,6 +80,7 @@ cat > "$APP_DIR/Contents/MacOS/Muusic Bridge" <<'EOF'
 APP_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 NODE_BIN="$APP_ROOT/Resources/bin/node"
 SCRIPT_PATH="$APP_ROOT/Resources/muusic-bridge.mjs"
+setopt null_glob
 
 if [[ -x "$NODE_BIN" ]]; then
   exec "$NODE_BIN" "$SCRIPT_PATH"
@@ -90,14 +91,17 @@ for candidate in \
   "/opt/homebrew/bin/node" \
   "/usr/local/bin/node" \
   "/opt/local/bin/node" \
-  "/Library/Frameworks/Node.framework/Versions/Current/bin/node"
+  "/Library/Frameworks/Node.framework/Versions/Current/bin/node" \
+  "$HOME/.asdf/shims/node" \
+  "$HOME/.volta/bin/node" \
+  "$HOME/.nvm/versions/node/"*/bin/node
 do
   if [[ -n "$candidate" && -x "$candidate" ]]; then
     exec "$candidate" "$SCRIPT_PATH"
   fi
 done
 
-osascript -e 'display dialog "Runtime do Muusic Bridge não encontrado dentro do app." buttons {"OK"} default button "OK" with icon caution'
+osascript -e 'display dialog "Runtime do Muusic Bridge não encontrado dentro do app nem nos caminhos padrão do macOS." buttons {"OK"} default button "OK" with icon caution'
 exit 1
 EOF
 
