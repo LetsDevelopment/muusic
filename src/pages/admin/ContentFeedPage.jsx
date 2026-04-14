@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { CalendarDays, Eye, Heart, Pencil, Plus, Radio, ToggleLeft, ToggleRight, Users, Video } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { CalendarDays, Eye, Heart, Pencil, Plus, ToggleLeft, ToggleRight, Users, Video } from 'lucide-react';
 import PageHeader from '../../components/admin/PageHeader';
 import Button from '../../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
@@ -9,19 +9,13 @@ const STORAGE_KEY = 'muusic.admin.content.feed';
 
 const STATUS_META = {
   published: {
-    label: 'Publicado',
-    dot: 'bg-emerald-400',
-    chip: 'bg-emerald-500/15 text-emerald-200 ring-1 ring-emerald-500/25'
+    dot: 'bg-emerald-400'
   },
   scheduled: {
-    label: 'Agendado',
-    dot: 'bg-amber-400',
-    chip: 'bg-amber-500/15 text-amber-100 ring-1 ring-amber-500/25'
+    dot: 'bg-amber-400'
   },
   inactive: {
-    label: 'Inativo',
-    dot: 'bg-rose-400',
-    chip: 'bg-rose-500/15 text-rose-100 ring-1 ring-rose-500/25'
+    dot: 'bg-slate-500'
   }
 };
 
@@ -243,21 +237,6 @@ export default function ContentFeedPage() {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
   }, [items]);
 
-  const summary = useMemo(() => {
-    return items.reduce(
-      (accumulator, item) => {
-        accumulator.total += 1;
-        accumulator.likes += Number(item.likes || 0);
-        accumulator.reach += Number(item.reach || 0);
-        if (item.status === 'published') accumulator.published += 1;
-        if (item.status === 'scheduled') accumulator.scheduled += 1;
-        if (item.status === 'inactive') accumulator.inactive += 1;
-        return accumulator;
-      },
-      { total: 0, likes: 0, reach: 0, published: 0, scheduled: 0, inactive: 0 }
-    );
-  }, [items]);
-
   function openNewModal() {
     setEditorDraft(makeInitialDraft());
   }
@@ -324,65 +303,6 @@ export default function ContentFeedPage() {
         }
       />
 
-      <section className="grid gap-4 xl:grid-cols-[1.35fr,0.9fr]">
-        <Card className="overflow-hidden border-white/10 bg-[linear-gradient(135deg,#0f172a_0%,#111827_55%,#071122_100%)] text-white">
-          <CardHeader className="pb-4">
-            <p className="text-xs uppercase tracking-[0.22em] text-sky-300/70">Feed</p>
-            <CardTitle className="text-2xl">Conteúdos publicados, agendados e inativos em um só lugar</CardTitle>
-            <p className="max-w-2xl text-sm text-slate-300">
-              A equipe de marketing consegue revisar a vitrine do feed, abrir previews de imagem ou vídeo, editar peças e ativar ou inativar publicações sem sair do painel.
-            </p>
-          </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-3">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Publicados</p>
-              <p className="mt-3 text-3xl font-semibold">{summary.published}</p>
-              <p className="mt-2 text-sm text-slate-300">Com distribuição ativa na plataforma.</p>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Agendados</p>
-              <p className="mt-3 text-3xl font-semibold">{summary.scheduled}</p>
-              <p className="mt-2 text-sm text-slate-300">Prontos para publicação futura.</p>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Inativos</p>
-              <p className="mt-3 text-3xl font-semibold">{summary.inactive}</p>
-              <p className="mt-2 text-sm text-slate-300">Desligados, mas ainda editáveis.</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-white/10 bg-slate-950 text-white">
-          <CardHeader>
-            <p className="text-xs uppercase tracking-[0.22em] text-slate-500">Resumo do Feed</p>
-            <CardTitle className="text-xl">Performance consolidada</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-3 xl:grid-cols-1">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <div className="flex items-center gap-2 text-slate-300">
-                <Heart className="h-4 w-4 text-rose-300" />
-                Likes
-              </div>
-              <p className="mt-3 text-2xl font-semibold">{formatCompact(summary.likes)}</p>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <div className="flex items-center gap-2 text-slate-300">
-                <Users className="h-4 w-4 text-sky-300" />
-                Alcance
-              </div>
-              <p className="mt-3 text-2xl font-semibold">{formatCompact(summary.reach)}</p>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <div className="flex items-center gap-2 text-slate-300">
-                <Radio className="h-4 w-4 text-emerald-300" />
-                Itens no feed
-              </div>
-              <p className="mt-3 text-2xl font-semibold">{summary.total}</p>
-            </div>
-          </CardContent>
-        </Card>
-      </section>
-
       <Card className="border-white/10 bg-slate-950 text-white">
         <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
@@ -396,14 +316,13 @@ export default function ContentFeedPage() {
         </CardHeader>
         <CardContent>
           <div className="overflow-hidden rounded-3xl border border-white/10">
-            <div className="hidden grid-cols-[0.95fr,1.5fr,0.95fr,0.8fr,0.8fr,0.5fr,0.7fr] gap-4 border-b border-white/10 bg-white/[0.03] px-5 py-4 text-xs uppercase tracking-[0.18em] text-slate-500 lg:grid">
+            <div className="hidden grid-cols-[1.15fr,1.5fr,0.95fr,0.8fr,0.8fr,0.5fr] gap-4 border-b border-white/10 bg-white/[0.03] px-5 py-4 text-xs uppercase tracking-[0.18em] text-slate-500 lg:grid">
               <span>Status</span>
               <span>Conteúdo</span>
               <span>Data</span>
               <span>Likes</span>
               <span>Alcance</span>
               <span>Edição</span>
-              <span>Ativar</span>
             </div>
 
             <div className="divide-y divide-white/10">
@@ -412,10 +331,19 @@ export default function ContentFeedPage() {
                 const isActive = item.status !== 'inactive';
 
                 return (
-                  <div key={item.id} className="grid gap-4 px-4 py-5 lg:grid-cols-[0.95fr,1.5fr,0.95fr,0.8fr,0.8fr,0.5fr,0.7fr] lg:px-5">
+                  <div key={item.id} className="grid gap-4 px-4 py-5 lg:grid-cols-[1.15fr,1.5fr,0.95fr,0.8fr,0.8fr,0.5fr] lg:px-5">
                     <div className="flex items-center gap-3 text-sm text-slate-200">
                       <span className={`h-3 w-3 shrink-0 rounded-full ${status.dot}`} />
-                      <span className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${status.chip}`}>{status.label}</span>
+                      <button
+                        type="button"
+                        onClick={() => toggleItem(item)}
+                        className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium transition ${
+                          isActive ? 'bg-white/8 text-slate-100 hover:bg-white/12' : 'bg-white/5 text-slate-400 hover:bg-white/10'
+                        }`}
+                        aria-pressed={isActive}
+                      >
+                        {isActive ? <ToggleRight className="h-5 w-5" /> : <ToggleLeft className="h-5 w-5" />}
+                      </button>
                     </div>
 
                     <div className="flex items-center gap-4">
@@ -445,12 +373,12 @@ export default function ContentFeedPage() {
                     </div>
 
                     <div className="flex items-center gap-2 text-sm text-slate-200">
-                      <Heart className="h-4 w-4 text-rose-300" />
+                      <Heart className="h-4 w-4 text-slate-400" />
                       <span>{formatCompact(item.likes)}</span>
                     </div>
 
                     <div className="flex items-center gap-2 text-sm text-slate-200">
-                      <Users className="h-4 w-4 text-sky-300" />
+                      <Users className="h-4 w-4 text-slate-400" />
                       <span>{formatCompact(item.reach)}</span>
                     </div>
 
@@ -462,20 +390,6 @@ export default function ContentFeedPage() {
                         aria-label={`Editar ${item.title}`}
                       >
                         <Pencil className="h-4 w-4" />
-                      </button>
-                    </div>
-
-                    <div className="flex items-center">
-                      <button
-                        type="button"
-                        onClick={() => toggleItem(item)}
-                        className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium transition ${
-                          isActive ? 'bg-emerald-500/15 text-emerald-200 hover:bg-emerald-500/25' : 'bg-rose-500/15 text-rose-100 hover:bg-rose-500/25'
-                        }`}
-                        aria-pressed={isActive}
-                      >
-                        {isActive ? <ToggleRight className="h-5 w-5" /> : <ToggleLeft className="h-5 w-5" />}
-                        {isActive ? 'Ativo' : 'Inativo'}
                       </button>
                     </div>
                   </div>
