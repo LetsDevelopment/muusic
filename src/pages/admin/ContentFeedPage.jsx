@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { CalendarDays, Eye, Heart, Pencil, Plus, ToggleLeft, ToggleRight, Users, Video } from 'lucide-react';
+import { CalendarDays, Eye, Heart, Pencil, Plus, Users, Video } from 'lucide-react';
 import PageHeader from '../../components/admin/PageHeader';
 import Button from '../../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
@@ -70,6 +70,7 @@ function PreviewModal({ item, onClose }) {
                 autoPlay
                 playsInline
                 className="max-h-[70vh] w-full rounded-2xl bg-black object-contain"
+                style={{ accentColor: '#94a3b8' }}
               />
             ) : (
               <EmptyPreview type="video" />
@@ -82,6 +83,26 @@ function PreviewModal({ item, onClose }) {
         </div>
       </div>
     </div>
+  );
+}
+
+function StatusSwitch({ checked, onClick }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={onClick}
+      className={`peer relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border border-transparent shadow-sm outline-none transition-all duration-200 focus-visible:ring-2 focus-visible:ring-slate-300/80 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 ${
+        checked ? 'bg-slate-200/80 hover:bg-slate-200' : 'bg-white/10 hover:bg-white/15'
+      }`}
+    >
+      <span
+        className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-[0_1px_2px_rgba(15,23,42,0.32)] ring-0 transition-transform duration-200 ${
+          checked ? 'translate-x-[20px]' : 'translate-x-0.5'
+        }`}
+      />
+    </button>
   );
 }
 
@@ -304,16 +325,7 @@ export default function ContentFeedPage() {
       />
 
       <Card className="border-white/10 bg-slate-950 text-white">
-        <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.22em] text-slate-500">Feed</p>
-            <CardTitle className="text-xl">Conteúdos cadastrados</CardTitle>
-          </div>
-          <Button variant="outline" className="border-white/10 text-white hover:bg-white/10" onClick={openNewModal}>
-            <Plus className="h-4 w-4" />
-            Adicionar novo
-          </Button>
-        </CardHeader>
+        <CardHeader className="pb-0" />
         <CardContent>
           <div className="overflow-hidden rounded-3xl border border-white/10">
             <div className="hidden grid-cols-[1.15fr,1.5fr,0.95fr,0.8fr,0.8fr,0.5fr] gap-4 border-b border-white/10 bg-white/[0.03] px-5 py-4 text-xs uppercase tracking-[0.18em] text-slate-500 lg:grid">
@@ -334,16 +346,7 @@ export default function ContentFeedPage() {
                   <div key={item.id} className="grid gap-4 px-4 py-5 lg:grid-cols-[1.15fr,1.5fr,0.95fr,0.8fr,0.8fr,0.5fr] lg:px-5">
                     <div className="flex items-center gap-3 text-sm text-slate-200">
                       <span className={`h-3 w-3 shrink-0 rounded-full ${status.dot}`} />
-                      <button
-                        type="button"
-                        onClick={() => toggleItem(item)}
-                        className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium transition ${
-                          isActive ? 'bg-white/8 text-slate-100 hover:bg-white/12' : 'bg-white/5 text-slate-400 hover:bg-white/10'
-                        }`}
-                        aria-pressed={isActive}
-                      >
-                        {isActive ? <ToggleRight className="h-5 w-5" /> : <ToggleLeft className="h-5 w-5" />}
-                      </button>
+                      <StatusSwitch checked={isActive} onClick={() => toggleItem(item)} />
                     </div>
 
                     <div className="flex items-center gap-4">
