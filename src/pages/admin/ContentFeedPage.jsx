@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { CalendarDays, Eye, Heart, Images, Mic2, Pencil, Plus, Users, Video } from 'lucide-react';
+import { CalendarDays, ChevronRight, Eye, Heart, Images, Mic2, Pencil, Plus, Upload, Users, Video } from 'lucide-react';
 import PageHeader from '../../components/admin/PageHeader';
 import Button from '../../components/ui/Button';
 import { Card, CardContent, CardHeader } from '../../components/ui/Card';
@@ -14,42 +14,36 @@ const CONTENT_TYPES = [
     value: 'simple_image',
     label: 'Imagem simples / carrossel',
     icon: Images,
-    description: 'Post estático ou sequência curta de imagens.',
     mediaHint: 'Links das imagens do post'
   },
   {
     value: 'photo_album',
     label: 'Álbum de fotos',
     icon: Images,
-    description: 'Coleção de fotos para navegação em lote.',
     mediaHint: 'Links das fotos do álbum'
   },
   {
     value: 'ana_stories',
     label: 'Stories da Ana',
     icon: Video,
-    description: 'Sequência vertical com a identidade da Ana.',
     mediaHint: 'Links dos stories'
   },
   {
     value: 'ana_audio',
     label: 'Áudio da Ana',
     icon: Mic2,
-    description: 'Pílula em áudio com thumbnail de capa.',
     mediaHint: 'Link do arquivo de áudio'
   },
   {
     value: 'poll',
     label: 'Enquete, com ou sem imagem',
     icon: Eye,
-    description: 'Pergunta com duas ou mais opções de resposta.',
     mediaHint: 'Imagem opcional da enquete'
   },
   {
     value: 'tiktok_video',
     label: 'Video TikTok',
     icon: Video,
-    description: 'Vídeo curto no formato de social vertical.',
     mediaHint: 'Link do vídeo'
   }
 ];
@@ -216,9 +210,7 @@ function ContentTypeSelector({ value, onSelect }) {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-sm font-medium text-white">{option.label}</p>
-                  {selected ? <span className="admin-content-type-selected">Selecionado</span> : null}
                 </div>
-                <p className="mt-1 text-sm text-slate-400">{option.description}</p>
               </div>
             </div>
           </button>
@@ -234,6 +226,22 @@ function EditorField({ label, children }) {
       <span>{label}</span>
       {children}
     </label>
+  );
+}
+
+function MockUploadField({ label, helper, multiple = false }) {
+  return (
+    <EditorField label={label}>
+      <button type="button" className="admin-content-upload-field">
+        <span className="admin-content-upload-icon">
+          <Upload className="h-4 w-4" />
+        </span>
+        <span className="text-left">
+          <span className="block text-sm font-medium text-white">{multiple ? 'Selecionar arquivos' : 'Selecionar arquivo'}</span>
+          {helper ? <span className="mt-1 block text-sm text-slate-400">{helper}</span> : null}
+        </span>
+      </button>
+    </EditorField>
   );
 }
 
@@ -268,23 +276,24 @@ function ContentEditorPage({ draft, onChange, onBack, onSubmit }) {
         }
       />
 
+      <div className="admin-content-breadcrumb">
+        <span>V1</span>
+        <ChevronRight className="h-3.5 w-3.5" />
+        <span>Feed</span>
+        <ChevronRight className="h-3.5 w-3.5" />
+        <span>{draft.id ? 'Editar conteúdo' : 'Novo conteúdo'}</span>
+      </div>
+
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
         <Card className="border-white/10 bg-slate-950 text-white">
           <CardContent className="space-y-8 pt-6">
             <section className="space-y-4">
-              <div>
-                <p className="text-xs uppercase tracking-[0.22em] text-slate-500">Tipo de conteúdo</p>
-                <h2 className="mt-2 text-lg font-semibold text-white">Escolha o formato da publicação</h2>
-              </div>
               <ContentTypeSelector value={draft.contentType} onSelect={(nextType) => onChange('contentType', nextType)} />
             </section>
 
             <section className="admin-content-editor-section">
               <div className="admin-content-editor-section-head">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.22em] text-slate-500">Informações básicas</p>
-                  <h3 className="mt-2 text-lg font-semibold text-white">Contexto editorial</h3>
-                </div>
+                <h3 className="text-lg font-semibold text-white">Informações básicas</h3>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
@@ -297,74 +306,20 @@ function ContentEditorPage({ draft, onChange, onBack, onSubmit }) {
                   />
                 </EditorField>
 
-                <EditorField label="Criador">
-                  <input
-                    className="admin-content-editor-input"
-                    value={draft.creatorName}
-                    onChange={(event) => onChange('creatorName', event.target.value)}
-                    placeholder="Nome da pessoa responsável"
-                  />
-                </EditorField>
-
-                <EditorField label="Data da publicação">
-                  <input
-                    type="datetime-local"
-                    className="admin-content-editor-input"
-                    value={draft.publishedAt}
-                    onChange={(event) => onChange('publishedAt', event.target.value)}
-                  />
-                </EditorField>
-
-                <EditorField label="URL da miniatura">
-                  <input
-                    className="admin-content-editor-input"
-                    value={draft.thumbnail}
-                    onChange={(event) => onChange('thumbnail', event.target.value)}
-                    placeholder="https://..."
-                  />
-                </EditorField>
-
-                <EditorField label="Likes iniciais">
-                  <input
-                    type="number"
-                    min="0"
-                    className="admin-content-editor-input"
-                    value={draft.likes}
-                    onChange={(event) => onChange('likes', event.target.value)}
-                  />
-                </EditorField>
-
-                <EditorField label="Alcance inicial">
-                  <input
-                    type="number"
-                    min="0"
-                    className="admin-content-editor-input"
-                    value={draft.reach}
-                    onChange={(event) => onChange('reach', event.target.value)}
-                  />
-                </EditorField>
+                <MockUploadField label="Imagem de capa" helper="Mockup de upload. O envio real será implementado depois." />
               </div>
             </section>
 
             <section className="admin-content-editor-section">
               <div className="admin-content-editor-section-head">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.22em] text-slate-500">Campos do formato selecionado</p>
                   <h3 className="mt-2 text-lg font-semibold text-white">{typeMeta.label}</h3>
-                  <p className="mt-1 text-sm text-slate-400">{typeMeta.description}</p>
                 </div>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
                 {isMultiMedia ? (
-                  <EditorField label={typeMeta.mediaHint}>
-                    <textarea
-                      className="admin-content-editor-input admin-content-editor-textarea"
-                      value={draft.mediaGallery}
-                      onChange={(event) => onChange('mediaGallery', event.target.value)}
-                      placeholder={'https://.../arquivo-1\nhttps://.../arquivo-2'}
-                    />
-                  </EditorField>
+                  <MockUploadField label={draft.contentType === 'photo_album' ? 'Uploads de imagens' : 'Uploads de mídia'} helper="Mockup de upload múltiplo." multiple />
                 ) : null}
 
                 {!isAudio && !isPoll && draft.contentType !== 'simple_image' && draft.contentType !== 'photo_album' && draft.contentType !== 'ana_stories' ? (
@@ -379,14 +334,7 @@ function ContentEditorPage({ draft, onChange, onBack, onSubmit }) {
                 ) : null}
 
                 {draft.contentType === 'simple_image' ? (
-                  <EditorField label="Link principal da imagem ou do carrossel">
-                    <input
-                      className="admin-content-editor-input"
-                      value={draft.mediaUrl}
-                      onChange={(event) => onChange('mediaUrl', event.target.value)}
-                      placeholder="https://..."
-                    />
-                  </EditorField>
+                  <MockUploadField label="Upload da imagem ou do carrossel" helper="Mockup de upload." multiple />
                 ) : null}
 
                 {isAudio ? (
@@ -421,12 +369,7 @@ function ContentEditorPage({ draft, onChange, onBack, onSubmit }) {
                     </EditorField>
 
                     <EditorField label="Imagem opcional da enquete">
-                      <input
-                        className="admin-content-editor-input"
-                        value={draft.mediaUrl}
-                        onChange={(event) => onChange('mediaUrl', event.target.value)}
-                        placeholder="https://..."
-                      />
+                      <MockUploadField label="Imagem opcional da enquete" helper="Mockup de upload." />
                     </EditorField>
                   </>
                 ) : null}
@@ -452,7 +395,7 @@ function ContentEditorPage({ draft, onChange, onBack, onSubmit }) {
               <div>
                 <p className="text-xs uppercase tracking-[0.22em] text-slate-500">Resumo da publicação</p>
                 <h3 className="mt-2 text-lg font-semibold text-white">{draft.title || 'Novo conteúdo'}</h3>
-                <p className="mt-1 text-sm text-slate-400">{draft.creatorName || 'Defina quem está criando o conteúdo.'}</p>
+                <p className="mt-1 text-sm text-slate-400">{typeMeta.label}</p>
               </div>
 
               <div className="overflow-hidden rounded-[12px] border border-white/10 bg-white/[0.03]">
@@ -508,21 +451,6 @@ function ContentEditorPage({ draft, onChange, onBack, onSubmit }) {
                 ) : (
                   <div className="grid aspect-[4/3] place-items-center text-sm text-slate-400">Preview do conteúdo</div>
                 )}
-              </div>
-
-              <div className="space-y-3 rounded-[12px] border border-white/10 bg-white/[0.03] p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-sm text-slate-400">Publicação</span>
-                  <span className="text-sm text-white">{draft.publishedAt ? formatDate(new Date(draft.publishedAt).toISOString()) : 'Sem data'}</span>
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-sm text-slate-400">Likes iniciais</span>
-                  <span className="text-sm text-white">{formatCompact(draft.likes)}</span>
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-sm text-slate-400">Alcance inicial</span>
-                  <span className="text-sm text-white">{formatCompact(draft.reach)}</span>
-                </div>
               </div>
 
               <div className="space-y-3 border-t border-white/10 pt-4">
