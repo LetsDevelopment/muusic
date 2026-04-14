@@ -19,6 +19,10 @@ import { cn } from '../../lib/utils';
 
 const navSections = [
   {
+    label: 'V1',
+    items: [{ key: 'feed', label: 'Feed', icon: Clapperboard }]
+  },
+  {
     label: 'Management',
     items: [
       { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -28,10 +32,6 @@ const navSections = [
       { key: 'moderacao', label: 'Moderação', icon: ShieldCheck },
       { key: 'performance', label: 'Performance', icon: Activity }
     ]
-  },
-  {
-    label: 'Gestão de Conteúdo',
-    items: [{ key: 'feed', label: 'Feed', icon: Clapperboard }]
   },
   {
     label: 'Growth',

@@ -2,6 +2,7 @@ export const mockAdminFeedItems = [
   {
     id: 'feed-001',
     title: 'Campanha Lollapalooza Highlights',
+    creatorName: 'Ana Souza',
     type: 'image',
     thumbnail:
       'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=1200&q=80',
@@ -15,6 +16,7 @@ export const mockAdminFeedItems = [
   {
     id: 'feed-002',
     title: 'Teaser de lineup da semana',
+    creatorName: 'Bruno Lima',
     type: 'video',
     thumbnail: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=1200&q=80',
     mediaUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
@@ -26,6 +28,7 @@ export const mockAdminFeedItems = [
   {
     id: 'feed-003',
     title: 'Cobertura backstage do festival',
+    creatorName: 'Marina Costa',
     type: 'image',
     thumbnail:
       'https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?auto=format&fit=crop&w=1200&q=80',

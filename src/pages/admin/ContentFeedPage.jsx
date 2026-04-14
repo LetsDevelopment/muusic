@@ -54,7 +54,12 @@ function PreviewModal({ item, onClose }) {
         <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
           <div>
             <p className="text-xs uppercase tracking-[0.22em] text-slate-400">Preview do conteúdo</p>
-            <h3 className="mt-1 text-lg font-semibold text-white">{item.title}</h3>
+            <div className="mt-1 flex items-center gap-3">
+              <h3 className="text-lg font-semibold text-white">{item.title}</h3>
+              <span className="admin-content-feed-type-pill inline-flex items-center px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.18em]">
+                {item.type === 'video' ? 'Vídeo' : 'Imagem'}
+              </span>
+            </div>
           </div>
           <Button type="button" variant="outline" className="border-white/15 text-white hover:bg-white/10" onClick={onClose}>
             Fechar
@@ -71,14 +76,14 @@ function PreviewModal({ item, onClose }) {
                 controls
                 autoPlay
                 playsInline
-                className="max-h-[70vh] w-full rounded-2xl bg-black object-contain"
+                className="max-h-[70vh] w-full rounded-[12px] bg-black object-contain"
                 style={{ accentColor: '#94a3b8' }}
               />
             ) : (
               <EmptyPreview type="video" />
             )
           ) : item.mediaUrl ? (
-            <img src={item.mediaUrl} alt={item.title} className="max-h-[70vh] w-full rounded-2xl bg-black object-contain" />
+            <img src={item.mediaUrl} alt={item.title} className="max-h-[70vh] w-full rounded-[12px] bg-black object-contain" />
           ) : (
             <EmptyPreview type="image" />
           )}
@@ -139,6 +144,16 @@ function FeedEditorModal({ draft, onChange, onClose, onSubmit, submitLabel }) {
               value={draft.title}
               onChange={(event) => onChange('title', event.target.value)}
               placeholder="Ex: Highlights do fim de semana"
+            />
+          </label>
+
+          <label className="flex flex-col gap-2 text-sm text-slate-300">
+            Criador
+            <input
+              className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-sky-400"
+              value={draft.creatorName}
+              onChange={(event) => onChange('creatorName', event.target.value)}
+              placeholder="Nome da pessoa responsável"
             />
           </label>
 
@@ -234,6 +249,7 @@ function makeInitialDraft() {
   return {
     id: '',
     title: '',
+    creatorName: '',
     type: 'image',
     thumbnail: '',
     mediaUrl: '',
@@ -334,6 +350,7 @@ export default function ContentFeedPage() {
               <TableRow className="border-white/10 hover:bg-transparent">
                 <TableHead className="text-slate-500">Status</TableHead>
                 <TableHead className="text-slate-500">Conteúdo</TableHead>
+                <TableHead className="text-slate-500">Criador</TableHead>
                 <TableHead className="text-slate-500">Data</TableHead>
                 <TableHead className="text-slate-500">Likes</TableHead>
                 <TableHead className="text-slate-500">Alcance</TableHead>
@@ -359,12 +376,15 @@ export default function ContentFeedPage() {
                         <button
                           type="button"
                           onClick={() => setPreviewItem(item)}
-                          className="admin-content-feed-preview-trigger group relative h-24 w-32 shrink-0 overflow-hidden rounded-2xl text-left"
+                          className="admin-content-feed-preview-trigger group relative h-24 w-32 shrink-0 overflow-hidden rounded-[12px] text-left"
                           aria-label={`Abrir preview de ${item.title}`}
                         >
                           <img src={item.thumbnail} alt={item.title} className="h-full w-full object-cover transition duration-200 group-hover:scale-105" />
                           <span className="absolute inset-0 flex items-center justify-center bg-slate-950/10 opacity-0 transition group-hover:opacity-100">
                             {item.type === 'video' ? <Video className="h-6 w-6 text-white" /> : <Eye className="h-6 w-6 text-white" />}
+                          </span>
+                          <span className="admin-content-feed-type-pill absolute bottom-2 left-2 inline-flex items-center px-2 py-1 text-[10px] font-medium uppercase tracking-[0.16em]">
+                            {item.type === 'video' ? 'Vídeo' : 'Imagem'}
                           </span>
                         </button>
 
@@ -373,6 +393,10 @@ export default function ContentFeedPage() {
                           <p className="mt-1 text-sm text-slate-400">{item.type === 'video' ? 'Vídeo' : 'Imagem'} com preview em modal.</p>
                         </div>
                       </div>
+                    </TableCell>
+
+                    <TableCell className="w-[160px] text-sm text-slate-300">
+                      {item.creatorName || '-'}
                     </TableCell>
 
                     <TableCell className="w-[180px]">

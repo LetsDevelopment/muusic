@@ -8,7 +8,7 @@
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   background: rgba(255, 255, 255, 0.04) !important;
   padding: 0 !important;
-  border-radius: 18px !important;
+  border-radius: 12px !important;
   color: inherit !important;
 }
 
@@ -22,7 +22,7 @@
   background: rgba(255, 255, 255, 0.04) !important;
   color: rgb(226 232 240) !important;
   padding: 0 !important;
-  border-radius: 14px !important;
+  border-radius: 12px !important;
 }
 
 .admin-content-feed-edit-btn:hover {
@@ -32,27 +32,36 @@
 }
 
 .admin-content-feed-switch {
-  border: 1px solid transparent !important;
+  border: 1px solid rgba(148, 163, 184, 0.28) !important;
   padding: 0 !important;
-  background: rgba(255, 255, 255, 0.08) !important;
+  background: rgba(51, 65, 85, 0.92) !important;
   border-radius: 999px !important;
   color: transparent !important;
 }
 
 .admin-content-feed-switch:hover {
-  background: rgba(255, 255, 255, 0.12) !important;
+  background: rgba(71, 85, 105, 0.96) !important;
+  border-color: rgba(148, 163, 184, 0.42) !important;
 }
 
 .admin-content-feed-switch.is-checked {
-  background: rgba(226, 232, 240, 0.86) !important;
+  background: rgba(191, 219, 254, 0.9) !important;
+  border-color: rgba(191, 219, 254, 0.56) !important;
 }
 
 .admin-content-feed-switch.is-checked:hover {
-  background: rgba(226, 232, 240, 0.96) !important;
+  background: rgba(219, 234, 254, 0.96) !important;
 }
 
 .admin-content-feed-switch-thumb {
   box-shadow:
     0 1px 2px rgba(15, 23, 42, 0.32),
     0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.admin-content-feed-type-pill {
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 999px;
+  color: rgb(226 232 240);
 }
