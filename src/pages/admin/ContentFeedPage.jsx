@@ -1,13 +1,58 @@
-import { useEffect, useState } from 'react';
-import { CalendarDays, Eye, Heart, Pencil, Plus, Users, Video } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { CalendarDays, Eye, Heart, Images, Mic2, Pencil, Plus, Users, Video } from 'lucide-react';
 import PageHeader from '../../components/admin/PageHeader';
 import Button from '../../components/ui/Button';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
+import { Card, CardContent, CardHeader } from '../../components/ui/Card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/Table';
 import { mockAdminFeedItems } from '../../mocks/adminContentFeed';
 import '../../styles/admin-content-feed.css';
 
 const STORAGE_KEY = 'muusic.admin.content.feed';
+
+const CONTENT_TYPES = [
+  {
+    value: 'simple_image',
+    label: 'Imagem simples / carrossel',
+    icon: Images,
+    description: 'Post estático ou sequência curta de imagens.',
+    mediaHint: 'Links das imagens do post'
+  },
+  {
+    value: 'photo_album',
+    label: 'Álbum de fotos',
+    icon: Images,
+    description: 'Coleção de fotos para navegação em lote.',
+    mediaHint: 'Links das fotos do álbum'
+  },
+  {
+    value: 'ana_stories',
+    label: 'Stories da Ana',
+    icon: Video,
+    description: 'Sequência vertical com a identidade da Ana.',
+    mediaHint: 'Links dos stories'
+  },
+  {
+    value: 'ana_audio',
+    label: 'Áudio da Ana',
+    icon: Mic2,
+    description: 'Pílula em áudio com thumbnail de capa.',
+    mediaHint: 'Link do arquivo de áudio'
+  },
+  {
+    value: 'poll',
+    label: 'Enquete, com ou sem imagem',
+    icon: Eye,
+    description: 'Pergunta com duas ou mais opções de resposta.',
+    mediaHint: 'Imagem opcional da enquete'
+  },
+  {
+    value: 'tiktok_video',
+    label: 'Video TikTok',
+    icon: Video,
+    description: 'Vídeo curto no formato de social vertical.',
+    mediaHint: 'Link do vídeo'
+  }
+];
 
 const STATUS_META = {
   published: {
@@ -36,9 +81,21 @@ function formatCompact(value) {
   }).format(Number(value || 0));
 }
 
+function toDateTimeLocalValue(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return localDate.toISOString().slice(0, 16);
+}
+
+function getContentTypeMeta(contentType) {
+  return CONTENT_TYPES.find((item) => item.value === contentType) || CONTENT_TYPES[0];
+}
+
 function EmptyPreview({ type }) {
   return (
-    <div className="grid h-[340px] place-items-center rounded-2xl border border-dashed border-white/10 bg-black/30 text-sm text-slate-300">
+    <div className="grid h-[340px] place-items-center rounded-[12px] border border-dashed border-white/10 bg-black/30 text-sm text-slate-300">
       {type === 'video' ? 'Vídeo indisponível para preview.' : 'Imagem indisponível para preview.'}
     </div>
   );
@@ -46,6 +103,8 @@ function EmptyPreview({ type }) {
 
 function PreviewModal({ item, onClose }) {
   if (!item) return null;
+
+  const typeMeta = getContentTypeMeta(item.contentType);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm">
@@ -58,6 +117,9 @@ function PreviewModal({ item, onClose }) {
               <h3 className="text-lg font-semibold text-white">{item.title}</h3>
               <span className="admin-content-feed-type-pill inline-flex items-center px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.18em]">
                 {item.type === 'video' ? 'Vídeo' : 'Imagem'}
+              </span>
+              <span className="admin-content-feed-type-pill inline-flex items-center px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.18em]">
+                {typeMeta.label}
               </span>
             </div>
           </div>
@@ -113,150 +175,297 @@ function StatusSwitch({ checked, onClick }) {
   );
 }
 
-function FeedEditorModal({ draft, onChange, onClose, onSubmit, submitLabel }) {
-  if (!draft) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4 backdrop-blur-sm">
-      <button type="button" className="admin-content-feed-overlay absolute inset-0" onClick={onClose} aria-label="Fechar editor" />
-      <div className="relative z-10 w-full max-w-3xl rounded-[28px] border border-white/10 bg-slate-950 shadow-2xl">
-        <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
-          <div>
-            <p className="text-xs uppercase tracking-[0.22em] text-slate-400">Gestão de Conteúdo</p>
-            <h3 className="mt-1 text-lg font-semibold text-white">{submitLabel === 'Salvar conteúdo' ? 'Editar conteúdo' : 'Novo conteúdo'}</h3>
-          </div>
-          <Button type="button" variant="outline" className="border-white/15 text-white hover:bg-white/10" onClick={onClose}>
-            Cancelar
-          </Button>
-        </div>
-
-        <form
-          className="grid gap-4 p-6 md:grid-cols-2"
-          onSubmit={(event) => {
-            event.preventDefault();
-            onSubmit();
-          }}
-        >
-          <label className="flex flex-col gap-2 text-sm text-slate-300">
-            Título
-            <input
-              className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-sky-400"
-              value={draft.title}
-              onChange={(event) => onChange('title', event.target.value)}
-              placeholder="Ex: Highlights do fim de semana"
-            />
-          </label>
-
-          <label className="flex flex-col gap-2 text-sm text-slate-300">
-            Criador
-            <input
-              className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-sky-400"
-              value={draft.creatorName}
-              onChange={(event) => onChange('creatorName', event.target.value)}
-              placeholder="Nome da pessoa responsável"
-            />
-          </label>
-
-          <label className="flex flex-col gap-2 text-sm text-slate-300">
-            Tipo
-            <select
-              className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-sky-400"
-              value={draft.type}
-              onChange={(event) => onChange('type', event.target.value)}
-            >
-              <option value="image">Imagem</option>
-              <option value="video">Vídeo</option>
-            </select>
-          </label>
-
-          <label className="flex flex-col gap-2 text-sm text-slate-300">
-            URL da miniatura
-            <input
-              className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-sky-400"
-              value={draft.thumbnail}
-              onChange={(event) => onChange('thumbnail', event.target.value)}
-              placeholder="https://..."
-            />
-          </label>
-
-          <label className="flex flex-col gap-2 text-sm text-slate-300">
-            URL da mídia
-            <input
-              className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-sky-400"
-              value={draft.mediaUrl}
-              onChange={(event) => onChange('mediaUrl', event.target.value)}
-              placeholder={draft.type === 'video' ? 'https://...mp4' : 'https://...jpg'}
-            />
-          </label>
-
-          <label className="flex flex-col gap-2 text-sm text-slate-300">
-            Publicação
-            <input
-              type="datetime-local"
-              className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-sky-400"
-              value={draft.publishedAt}
-              onChange={(event) => onChange('publishedAt', event.target.value)}
-            />
-          </label>
-
-          <label className="flex flex-col gap-2 text-sm text-slate-300">
-            Status
-            <select
-              className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-sky-400"
-              value={draft.status}
-              onChange={(event) => onChange('status', event.target.value)}
-            >
-              <option value="published">Publicado</option>
-              <option value="scheduled">Agendado</option>
-              <option value="inactive">Inativo</option>
-            </select>
-          </label>
-
-          <label className="flex flex-col gap-2 text-sm text-slate-300">
-            Likes
-            <input
-              type="number"
-              min="0"
-              className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-sky-400"
-              value={draft.likes}
-              onChange={(event) => onChange('likes', event.target.value)}
-            />
-          </label>
-
-          <label className="flex flex-col gap-2 text-sm text-slate-300">
-            Alcance
-            <input
-              type="number"
-              min="0"
-              className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-sky-400"
-              value={draft.reach}
-              onChange={(event) => onChange('reach', event.target.value)}
-            />
-          </label>
-
-          <div className="md:col-span-2 flex justify-end">
-            <Button type="submit" className="bg-sky-500 text-slate-950 hover:bg-sky-400">
-              {submitLabel}
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-
 function makeInitialDraft() {
   return {
     id: '',
     title: '',
     creatorName: '',
+    contentType: 'simple_image',
     type: 'image',
     thumbnail: '',
     mediaUrl: '',
+    mediaGallery: '',
+    audioUrl: '',
+    question: '',
+    pollOptions: 'Opção 1\nOpção 2',
     status: 'scheduled',
     publishedAt: '',
     likes: 0,
     reach: 0
+  };
+}
+
+function ContentTypeSelector({ value, onSelect }) {
+  return (
+    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+      {CONTENT_TYPES.map((option) => {
+        const Icon = option.icon;
+        const selected = option.value === value;
+
+        return (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() => onSelect(option.value)}
+            className={`admin-content-type-option text-left ${selected ? 'is-selected' : ''}`}
+          >
+            <div className="flex items-start gap-3">
+              <div className="admin-content-type-icon">
+                <Icon className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-white">{option.label}</p>
+                <p className="mt-1 text-sm text-slate-400">{option.description}</p>
+              </div>
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function EditorField({ label, children }) {
+  return (
+    <label className="flex flex-col gap-2 text-sm text-slate-300">
+      <span>{label}</span>
+      {children}
+    </label>
+  );
+}
+
+function ContentEditorPage({ draft, onChange, onBack, onSubmit, submitMode }) {
+  const typeMeta = getContentTypeMeta(draft.contentType);
+  const isPoll = draft.contentType === 'poll';
+  const isAudio = draft.contentType === 'ana_audio';
+  const isMultiMedia =
+    draft.contentType === 'simple_image' || draft.contentType === 'photo_album' || draft.contentType === 'ana_stories';
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title={draft.id ? 'Editar conteúdo' : 'Novo conteúdo'}
+        subtitle="Escolha o formato e complete o restante dos campos abaixo."
+        actions={
+          <Button variant="outline" className="border-white/15 text-white hover:bg-white/10" onClick={onBack}>
+            Voltar para o feed
+          </Button>
+        }
+      />
+
+      <Card className="border-white/10 bg-slate-950 text-white">
+        <CardContent className="space-y-8 pt-6">
+          <section className="space-y-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.22em] text-slate-500">Tipo de conteúdo</p>
+              <h2 className="mt-2 text-lg font-semibold text-white">Escolha o formato da publicação</h2>
+            </div>
+            <ContentTypeSelector value={draft.contentType} onSelect={(nextType) => onChange('contentType', nextType)} />
+          </section>
+
+          <section className="grid gap-4 md:grid-cols-2">
+            <EditorField label="Título">
+              <input
+                className="admin-content-editor-input"
+                value={draft.title}
+                onChange={(event) => onChange('title', event.target.value)}
+                placeholder="Ex: Highlights do fim de semana"
+              />
+            </EditorField>
+
+            <EditorField label="Criador">
+              <input
+                className="admin-content-editor-input"
+                value={draft.creatorName}
+                onChange={(event) => onChange('creatorName', event.target.value)}
+                placeholder="Nome da pessoa responsável"
+              />
+            </EditorField>
+
+            <EditorField label="Data da publicação">
+              <input
+                type="datetime-local"
+                className="admin-content-editor-input"
+                value={draft.publishedAt}
+                onChange={(event) => onChange('publishedAt', event.target.value)}
+              />
+            </EditorField>
+
+            <EditorField label="URL da miniatura">
+              <input
+                className="admin-content-editor-input"
+                value={draft.thumbnail}
+                onChange={(event) => onChange('thumbnail', event.target.value)}
+                placeholder="https://..."
+              />
+            </EditorField>
+
+            <EditorField label="Likes iniciais">
+              <input
+                type="number"
+                min="0"
+                className="admin-content-editor-input"
+                value={draft.likes}
+                onChange={(event) => onChange('likes', event.target.value)}
+              />
+            </EditorField>
+
+            <EditorField label="Alcance inicial">
+              <input
+                type="number"
+                min="0"
+                className="admin-content-editor-input"
+                value={draft.reach}
+                onChange={(event) => onChange('reach', event.target.value)}
+              />
+            </EditorField>
+          </section>
+
+          <section className="space-y-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.22em] text-slate-500">Campos do formato selecionado</p>
+              <h3 className="mt-2 text-lg font-semibold text-white">{typeMeta.label}</h3>
+              <p className="mt-1 text-sm text-slate-400">{typeMeta.description}</p>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              {isMultiMedia ? (
+                <EditorField label={typeMeta.mediaHint}>
+                  <textarea
+                    className="admin-content-editor-input admin-content-editor-textarea"
+                    value={draft.mediaGallery}
+                    onChange={(event) => onChange('mediaGallery', event.target.value)}
+                    placeholder={'https://.../arquivo-1\nhttps://.../arquivo-2'}
+                  />
+                </EditorField>
+              ) : null}
+
+              {!isAudio && !isPoll && draft.contentType !== 'simple_image' && draft.contentType !== 'photo_album' && draft.contentType !== 'ana_stories' ? (
+                <EditorField label={typeMeta.mediaHint}>
+                  <input
+                    className="admin-content-editor-input"
+                    value={draft.mediaUrl}
+                    onChange={(event) => onChange('mediaUrl', event.target.value)}
+                    placeholder="https://..."
+                  />
+                </EditorField>
+              ) : null}
+
+              {draft.contentType === 'simple_image' ? (
+                <EditorField label="Link principal da imagem ou do carrossel">
+                  <input
+                    className="admin-content-editor-input"
+                    value={draft.mediaUrl}
+                    onChange={(event) => onChange('mediaUrl', event.target.value)}
+                    placeholder="https://..."
+                  />
+                </EditorField>
+              ) : null}
+
+              {isAudio ? (
+                <EditorField label="Link do áudio da Ana">
+                  <input
+                    className="admin-content-editor-input"
+                    value={draft.audioUrl}
+                    onChange={(event) => onChange('audioUrl', event.target.value)}
+                    placeholder="https://..."
+                  />
+                </EditorField>
+              ) : null}
+
+              {isPoll ? (
+                <>
+                  <EditorField label="Pergunta da enquete">
+                    <input
+                      className="admin-content-editor-input"
+                      value={draft.question}
+                      onChange={(event) => onChange('question', event.target.value)}
+                      placeholder="Qual lançamento deve abrir a semana?"
+                    />
+                  </EditorField>
+
+                  <EditorField label="Opções da enquete">
+                    <textarea
+                      className="admin-content-editor-input admin-content-editor-textarea"
+                      value={draft.pollOptions}
+                      onChange={(event) => onChange('pollOptions', event.target.value)}
+                      placeholder={'Opção 1\nOpção 2\nOpção 3'}
+                    />
+                  </EditorField>
+
+                  <EditorField label="Imagem opcional da enquete">
+                    <input
+                      className="admin-content-editor-input"
+                      value={draft.mediaUrl}
+                      onChange={(event) => onChange('mediaUrl', event.target.value)}
+                      placeholder="https://..."
+                    />
+                  </EditorField>
+                </>
+              ) : null}
+
+              {draft.contentType === 'tiktok_video' ? (
+                <EditorField label="URL do vídeo TikTok">
+                  <input
+                    className="admin-content-editor-input"
+                    value={draft.mediaUrl}
+                    onChange={(event) => onChange('mediaUrl', event.target.value)}
+                    placeholder="https://..."
+                  />
+                </EditorField>
+              ) : null}
+            </div>
+          </section>
+
+          <section className="flex flex-wrap justify-end gap-3 border-t border-white/10 pt-6">
+            <Button
+              type="button"
+              variant="outline"
+              className="border-white/15 text-white hover:bg-white/10"
+              onClick={() => onSubmit('inactive')}
+            >
+              Salvar como rascunho
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="border-white/15 text-white hover:bg-white/10"
+              onClick={() => onSubmit('scheduled')}
+            >
+              Agendar
+            </Button>
+            <Button type="button" className="bg-sky-500 text-slate-950 hover:bg-sky-400" onClick={() => onSubmit('published')}>
+              Publicar agora
+            </Button>
+          </section>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function normalizeDraftForSave(draft, nextStatus) {
+  const mediaUrl =
+    draft.contentType === 'ana_audio'
+      ? draft.audioUrl
+      : draft.contentType === 'poll'
+        ? draft.mediaUrl
+        : draft.contentType === 'simple_image'
+          ? draft.mediaUrl
+          : draft.mediaUrl || draft.thumbnail;
+
+  const contentType = draft.contentType;
+  const isVideoType = contentType === 'ana_stories' || contentType === 'tiktok_video';
+
+  return {
+    ...draft,
+    id: draft.id || `feed-${Date.now()}`,
+    status: nextStatus,
+    type: isVideoType ? 'video' : 'image',
+    mediaUrl: mediaUrl || draft.thumbnail || '',
+    publishedAt: draft.publishedAt ? new Date(draft.publishedAt).toISOString() : new Date().toISOString(),
+    likes: Number(draft.likes || 0),
+    reach: Number(draft.reach || 0)
   };
 }
 
@@ -276,16 +485,24 @@ export default function ContentFeedPage() {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
   }, [items]);
 
-  function openNewModal() {
+  const listItems = useMemo(() => items, [items]);
+
+  function openNewPage() {
     setEditorDraft(makeInitialDraft());
   }
 
-  function openEditModal(item) {
+  function openEditPage(item) {
     setEditorDraft({
+      ...makeInitialDraft(),
       ...item,
-      publishedAt: item.publishedAt ? new Date(item.publishedAt).toISOString().slice(0, 16) : '',
+      publishedAt: toDateTimeLocalValue(item.publishedAt),
       likes: Number(item.likes || 0),
-      reach: Number(item.reach || 0)
+      reach: Number(item.reach || 0),
+      contentType: item.contentType || 'simple_image',
+      mediaGallery: item.mediaGallery || '',
+      pollOptions: item.pollOptions || 'Opção 1\nOpção 2',
+      question: item.question || '',
+      audioUrl: item.audioUrl || ''
     });
   }
 
@@ -293,23 +510,13 @@ export default function ContentFeedPage() {
     setEditorDraft((current) => (current ? { ...current, [field]: value } : current));
   }
 
-  function submitDraft() {
+  function submitDraft(nextStatus) {
     if (!editorDraft) return;
 
-    const normalized = {
-      ...editorDraft,
-      id: editorDraft.id || `feed-${Date.now()}`,
-      publishedAt: editorDraft.publishedAt ? new Date(editorDraft.publishedAt).toISOString() : new Date().toISOString(),
-      likes: Number(editorDraft.likes || 0),
-      reach: Number(editorDraft.reach || 0)
-    };
-
+    const normalized = normalizeDraftForSave(editorDraft, nextStatus);
     setItems((current) => {
       const existingIndex = current.findIndex((item) => item.id === normalized.id);
-      if (existingIndex === -1) {
-        return [normalized, ...current];
-      }
-
+      if (existingIndex === -1) return [normalized, ...current];
       const next = [...current];
       next[existingIndex] = normalized;
       return next;
@@ -319,14 +526,19 @@ export default function ContentFeedPage() {
 
   function toggleItem(item) {
     setItems((current) =>
-      current.map((entry) => {
-        if (entry.id !== item.id) return entry;
-        return {
-          ...entry,
-          status: entry.status === 'inactive' ? 'published' : 'inactive'
-        };
-      })
+      current.map((entry) =>
+        entry.id === item.id
+          ? {
+              ...entry,
+              status: entry.status === 'inactive' ? 'published' : 'inactive'
+            }
+          : entry
+      )
     );
+  }
+
+  if (editorDraft) {
+    return <ContentEditorPage draft={editorDraft} onChange={updateDraft} onBack={() => setEditorDraft(null)} onSubmit={submitDraft} />;
   }
 
   return (
@@ -335,7 +547,7 @@ export default function ContentFeedPage() {
         title="Gestão de Conteúdo"
         subtitle="Operação editorial do time de marketing para o que aparece na plataforma."
         actions={
-          <Button className="bg-sky-500 text-slate-950 hover:bg-sky-400" onClick={openNewModal}>
+          <Button className="bg-sky-500 text-slate-950 hover:bg-sky-400" onClick={openNewPage}>
             <Plus className="h-4 w-4" />
             Adicionar novo
           </Button>
@@ -358,9 +570,10 @@ export default function ContentFeedPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {items.map((item) => {
+              {listItems.map((item) => {
                 const status = STATUS_META[item.status] || STATUS_META.inactive;
                 const isActive = item.status !== 'inactive';
+                const typeMeta = getContentTypeMeta(item.contentType);
 
                 return (
                   <TableRow key={item.id} className="border-white/10 hover:bg-white/[0.03]">
@@ -371,7 +584,7 @@ export default function ContentFeedPage() {
                       </div>
                     </TableCell>
 
-                    <TableCell className="min-w-[320px]">
+                    <TableCell className="min-w-[340px]">
                       <div className="flex items-center gap-4">
                         <button
                           type="button"
@@ -390,14 +603,12 @@ export default function ContentFeedPage() {
 
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-white">{item.title}</p>
-                          <p className="mt-1 text-sm text-slate-400">{item.type === 'video' ? 'Vídeo' : 'Imagem'} com preview em modal.</p>
+                          <p className="mt-1 text-sm text-slate-400">{typeMeta.label}</p>
                         </div>
                       </div>
                     </TableCell>
 
-                    <TableCell className="w-[160px] text-sm text-slate-300">
-                      {item.creatorName || '-'}
-                    </TableCell>
+                    <TableCell className="w-[160px] text-sm text-slate-300">{item.creatorName || '-'}</TableCell>
 
                     <TableCell className="w-[180px]">
                       <div className="flex items-center gap-2 text-sm text-slate-300">
@@ -423,7 +634,7 @@ export default function ContentFeedPage() {
                     <TableCell className="w-[96px]">
                       <button
                         type="button"
-                        onClick={() => openEditModal(item)}
+                        onClick={() => openEditPage(item)}
                         className="admin-content-feed-edit-btn inline-flex h-10 w-10 items-center justify-center text-slate-200 transition"
                         aria-label={`Editar ${item.title}`}
                       >
@@ -439,13 +650,6 @@ export default function ContentFeedPage() {
       </Card>
 
       <PreviewModal item={previewItem} onClose={() => setPreviewItem(null)} />
-      <FeedEditorModal
-        draft={editorDraft}
-        onChange={updateDraft}
-        onClose={() => setEditorDraft(null)}
-        onSubmit={submitDraft}
-        submitLabel={editorDraft?.id ? 'Salvar conteúdo' : 'Adicionar conteúdo'}
-      />
     </div>
   );
 }
