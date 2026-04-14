@@ -3,7 +3,9 @@ import { CalendarDays, Eye, Heart, Pencil, Plus, Users, Video } from 'lucide-rea
 import PageHeader from '../../components/admin/PageHeader';
 import Button from '../../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/Table';
 import { mockAdminFeedItems } from '../../mocks/adminContentFeed';
+import '../../styles/admin-content-feed.css';
 
 const STORAGE_KEY = 'muusic.admin.content.feed';
 
@@ -47,7 +49,7 @@ function PreviewModal({ item, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm">
-      <button type="button" className="absolute inset-0" onClick={onClose} aria-label="Fechar preview" />
+      <button type="button" className="admin-content-feed-overlay absolute inset-0" onClick={onClose} aria-label="Fechar preview" />
       <div className="relative z-10 w-full max-w-5xl overflow-hidden rounded-[28px] border border-white/10 bg-slate-950 shadow-2xl">
         <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
           <div>
@@ -93,12 +95,12 @@ function StatusSwitch({ checked, onClick }) {
       role="switch"
       aria-checked={checked}
       onClick={onClick}
-      className={`peer relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border border-transparent shadow-sm outline-none transition-all duration-200 focus-visible:ring-2 focus-visible:ring-slate-300/80 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 ${
-        checked ? 'bg-slate-200/80 hover:bg-slate-200' : 'bg-white/10 hover:bg-white/15'
+      className={`admin-content-feed-switch peer relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full shadow-sm outline-none transition-all duration-200 focus-visible:ring-2 focus-visible:ring-slate-300/80 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 ${
+        checked ? 'is-checked' : ''
       }`}
     >
       <span
-        className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-[0_1px_2px_rgba(15,23,42,0.32)] ring-0 transition-transform duration-200 ${
+        className={`admin-content-feed-switch-thumb pointer-events-none inline-block h-5 w-5 rounded-full bg-white ring-0 transition-transform duration-200 ${
           checked ? 'translate-x-[20px]' : 'translate-x-0.5'
         }`}
       />
@@ -111,7 +113,7 @@ function FeedEditorModal({ draft, onChange, onClose, onSubmit, submitLabel }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4 backdrop-blur-sm">
-      <button type="button" className="absolute inset-0" onClick={onClose} aria-label="Fechar editor" />
+      <button type="button" className="admin-content-feed-overlay absolute inset-0" onClick={onClose} aria-label="Fechar editor" />
       <div className="relative z-10 w-full max-w-3xl rounded-[28px] border border-white/10 bg-slate-950 shadow-2xl">
         <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
           <div>
@@ -326,80 +328,89 @@ export default function ContentFeedPage() {
 
       <Card className="border-white/10 bg-slate-950 text-white">
         <CardHeader className="pb-0" />
-        <CardContent>
-          <div className="overflow-hidden rounded-3xl border border-white/10">
-            <div className="hidden grid-cols-[1.15fr,1.5fr,0.95fr,0.8fr,0.8fr,0.5fr] gap-4 border-b border-white/10 bg-white/[0.03] px-5 py-4 text-xs uppercase tracking-[0.18em] text-slate-500 lg:grid">
-              <span>Status</span>
-              <span>Conteúdo</span>
-              <span>Data</span>
-              <span>Likes</span>
-              <span>Alcance</span>
-              <span>Edição</span>
-            </div>
-
-            <div className="divide-y divide-white/10">
+        <CardContent className="pt-6">
+          <Table className="bg-transparent text-white">
+            <TableHeader className="bg-white/[0.03]">
+              <TableRow className="border-white/10 hover:bg-transparent">
+                <TableHead className="text-slate-500">Status</TableHead>
+                <TableHead className="text-slate-500">Conteúdo</TableHead>
+                <TableHead className="text-slate-500">Data</TableHead>
+                <TableHead className="text-slate-500">Likes</TableHead>
+                <TableHead className="text-slate-500">Alcance</TableHead>
+                <TableHead className="text-slate-500">Edição</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {items.map((item) => {
                 const status = STATUS_META[item.status] || STATUS_META.inactive;
                 const isActive = item.status !== 'inactive';
 
                 return (
-                  <div key={item.id} className="grid gap-4 px-4 py-5 lg:grid-cols-[1.15fr,1.5fr,0.95fr,0.8fr,0.8fr,0.5fr] lg:px-5">
-                    <div className="flex items-center gap-3 text-sm text-slate-200">
-                      <span className={`h-3 w-3 shrink-0 rounded-full ${status.dot}`} />
-                      <StatusSwitch checked={isActive} onClick={() => toggleItem(item)} />
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                      <button
-                        type="button"
-                        onClick={() => setPreviewItem(item)}
-                        className="group relative h-24 w-32 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-white/5 text-left"
-                        aria-label={`Abrir preview de ${item.title}`}
-                      >
-                        <img src={item.thumbnail} alt={item.title} className="h-full w-full object-cover transition duration-200 group-hover:scale-105" />
-                        <span className="absolute inset-0 flex items-center justify-center bg-slate-950/10 opacity-0 transition group-hover:opacity-100">
-                          {item.type === 'video' ? <Video className="h-6 w-6 text-white" /> : <Eye className="h-6 w-6 text-white" />}
-                        </span>
-                      </button>
-
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-white">{item.title}</p>
-                        <p className="mt-1 text-sm text-slate-400">
-                          {item.type === 'video' ? 'Vídeo' : 'Imagem'} com preview em modal.
-                        </p>
+                  <TableRow key={item.id} className="border-white/10 hover:bg-white/[0.03]">
+                    <TableCell className="w-[118px]">
+                      <div className="flex items-center gap-3 text-sm text-slate-200">
+                        <span className={`h-3 w-3 shrink-0 rounded-full ${status.dot}`} />
+                        <StatusSwitch checked={isActive} onClick={() => toggleItem(item)} />
                       </div>
-                    </div>
+                    </TableCell>
 
-                    <div className="flex items-center gap-2 text-sm text-slate-300">
-                      <CalendarDays className="h-4 w-4 text-slate-500" />
-                      <span>{formatDate(item.publishedAt)}</span>
-                    </div>
+                    <TableCell className="min-w-[320px]">
+                      <div className="flex items-center gap-4">
+                        <button
+                          type="button"
+                          onClick={() => setPreviewItem(item)}
+                          className="admin-content-feed-preview-trigger group relative h-24 w-32 shrink-0 overflow-hidden rounded-2xl text-left"
+                          aria-label={`Abrir preview de ${item.title}`}
+                        >
+                          <img src={item.thumbnail} alt={item.title} className="h-full w-full object-cover transition duration-200 group-hover:scale-105" />
+                          <span className="absolute inset-0 flex items-center justify-center bg-slate-950/10 opacity-0 transition group-hover:opacity-100">
+                            {item.type === 'video' ? <Video className="h-6 w-6 text-white" /> : <Eye className="h-6 w-6 text-white" />}
+                          </span>
+                        </button>
 
-                    <div className="flex items-center gap-2 text-sm text-slate-200">
-                      <Heart className="h-4 w-4 text-slate-400" />
-                      <span>{formatCompact(item.likes)}</span>
-                    </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-white">{item.title}</p>
+                          <p className="mt-1 text-sm text-slate-400">{item.type === 'video' ? 'Vídeo' : 'Imagem'} com preview em modal.</p>
+                        </div>
+                      </div>
+                    </TableCell>
 
-                    <div className="flex items-center gap-2 text-sm text-slate-200">
-                      <Users className="h-4 w-4 text-slate-400" />
-                      <span>{formatCompact(item.reach)}</span>
-                    </div>
+                    <TableCell className="w-[180px]">
+                      <div className="flex items-center gap-2 text-sm text-slate-300">
+                        <CalendarDays className="h-4 w-4 text-slate-500" />
+                        <span>{formatDate(item.publishedAt)}</span>
+                      </div>
+                    </TableCell>
 
-                    <div className="flex items-center">
+                    <TableCell className="w-[120px]">
+                      <div className="flex items-center gap-2 text-sm text-slate-200">
+                        <Heart className="h-4 w-4 text-slate-400" />
+                        <span>{formatCompact(item.likes)}</span>
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="w-[120px]">
+                      <div className="flex items-center gap-2 text-sm text-slate-200">
+                        <Users className="h-4 w-4 text-slate-400" />
+                        <span>{formatCompact(item.reach)}</span>
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="w-[96px]">
                       <button
                         type="button"
                         onClick={() => openEditModal(item)}
-                        className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-slate-200 transition hover:bg-white/10 hover:text-white"
+                        className="admin-content-feed-edit-btn inline-flex h-10 w-10 items-center justify-center text-slate-200 transition"
                         aria-label={`Editar ${item.title}`}
                       >
                         <Pencil className="h-4 w-4" />
                       </button>
-                    </div>
-                  </div>
+                    </TableCell>
+                  </TableRow>
                 );
               })}
-            </div>
-          </div>
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 

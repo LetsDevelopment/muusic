@@ -35,6 +35,7 @@ const navSections = [
   },
   {
     label: 'Growth',
+    disabled: true,
     items: [
       { key: 'lista_espera', label: 'Lista de Espera', icon: Users },
       { key: 'landing_pages', label: 'Landing Pages', icon: LayoutDashboard },
@@ -43,6 +44,7 @@ const navSections = [
   },
   {
     label: 'Publicidade',
+    disabled: true,
     items: [
       { key: 'publicidade_dashboard', label: 'Dashboard', icon: BarChart3 },
       { key: 'anuncios', label: 'Anúncios', icon: Ticket },
@@ -80,22 +82,35 @@ function SidebarContent({ activeItem, collapsed, onToggle, onNavigate, closeMobi
       <div className="space-y-6 p-4">
         {navSections.map((section) => (
           <div key={section.label}>
-            {!collapsed ? <p className="mb-2 text-xs uppercase tracking-wide text-muted-foreground">{section.label}</p> : null}
+            {!collapsed ? (
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">{section.label}</p>
+                {section.disabled ? (
+                  <span className="rounded-full border border-border/70 px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] text-muted-foreground/80">
+                    Inativo
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
             <nav className="space-y-1">
               {section.items.map((item) => {
                 const Icon = item.icon;
                 const active = item.key === activeItem;
+                const disabled = Boolean(section.disabled);
                 const row = (
                   <button
                     key={item.key}
                     type="button"
+                    disabled={disabled}
                     className={cn(
                       'admin-sidebar-item group flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm transition-colors duration-150',
                       active ? 'is-active text-white' : 'text-muted-foreground hover:text-white',
-                      collapsed && 'justify-center px-0'
+                      collapsed && 'justify-center px-0',
+                      disabled && 'cursor-not-allowed opacity-40 hover:text-muted-foreground'
                     )}
                     aria-current={active ? 'page' : undefined}
                     onClick={() => {
+                      if (disabled) return;
                       onNavigate?.(item.key);
                       closeMobile?.();
                     }}
