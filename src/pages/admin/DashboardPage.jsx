@@ -5,7 +5,8 @@ import Alert from '../../components/ui/Alert';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import EmptyState from '../../components/ui/EmptyState';
 import KpiCard from '../../components/ui/KpiCard';
-import Skeleton from '../../components/ui/Skeleton';
+import LoadingState from '../../components/ui/LoadingState';
+import StatusDot from '../../components/ui/StatusDot';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/Table';
 import { fetchUsersFromApi, fetchUsersMock, mockUsers } from '../../mocks/adminUsers';
 
@@ -104,11 +105,7 @@ export default function DashboardPage({ apiFetch }) {
           {error ? <Alert>{error}</Alert> : null}
 
           {loading ? (
-            <div className="space-y-2">
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-            </div>
+            <LoadingState title="Carregando atividade ao vivo" description="Buscando os usuários com reprodução ativa neste momento." rows={3} />
           ) : activeStreamingUsers.length === 0 ? (
             <EmptyState
               title="Nenhum usuário em streaming"
@@ -135,10 +132,7 @@ export default function DashboardPage({ apiFetch }) {
                       <TableCell>{nowPlaying.artistName || 'Artista não informado'}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <span className="relative inline-flex h-2.5 w-2.5 shrink-0">
-                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400" />
-                          </span>
+                          <StatusDot variant="success" pulse />
                           <span>{nowPlaying.trackName || 'Faixa desconhecida'}</span>
                         </div>
                       </TableCell>

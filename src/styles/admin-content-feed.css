@@ -5,30 +5,30 @@
 }
 
 .admin-content-feed-preview-trigger {
-  border: 1px solid var(--color-border-subtle) !important;
-  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: rgba(255, 255, 255, 0.04) !important;
   padding: 0 !important;
   border-radius: 12px !important;
   color: inherit !important;
 }
 
 .admin-content-feed-preview-trigger:hover {
-  background: rgba(255, 255, 255, 0.05) !important;
-  border-color: var(--color-border-strong) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
 }
 
 .admin-content-feed-edit-btn {
-  border: 1px solid var(--color-border-subtle) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
   background: rgba(255, 255, 255, 0.04) !important;
-  color: var(--color-text-secondary) !important;
+  color: rgb(226 232 240) !important;
   padding: 0 !important;
   border-radius: 12px !important;
 }
 
 .admin-content-feed-edit-btn:hover {
   background: rgba(255, 255, 255, 0.08) !important;
-  border-color: var(--color-border-strong) !important;
-  color: var(--color-text-primary) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  color: rgb(255 255 255) !important;
 }
 
 .admin-content-feed-switch {
@@ -45,8 +45,8 @@
 }
 
 .admin-content-feed-switch.is-checked {
-  background: rgba(125, 211, 252, 0.92) !important;
-  border-color: rgba(125, 211, 252, 0.56) !important;
+  background: rgba(191, 219, 254, 0.9) !important;
+  border-color: rgba(191, 219, 254, 0.56) !important;
 }
 
 .admin-content-feed-switch.is-checked:hover {
@@ -60,32 +60,38 @@
 }
 
 .admin-content-feed-type-pill {
-  border: 1px solid rgba(148, 163, 184, 0.2);
+  border: 1px solid rgba(148, 163, 184, 0.22);
   background: rgba(255, 255, 255, 0.05);
   border-radius: 999px;
-  color: var(--color-text-secondary);
+  color: rgb(226 232 240);
 }
 
 .admin-content-type-option {
-  border: 1px solid var(--color-border-subtle) !important;
-  background: rgba(255, 255, 255, 0.02) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.02)) !important;
   border-radius: 12px !important;
-  color: var(--color-text-secondary) !important;
-  padding: 20px !important;
-  min-height: 120px;
-  box-shadow: none;
+  color: rgb(226 232 240) !important;
+  padding: 18px !important;
+  min-height: 132px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
 }
 
 .admin-content-type-option:hover {
-  background: rgba(255, 255, 255, 0.04) !important;
-  border-color: rgba(148, 163, 184, 0.24) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.03)) !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
   transform: translateY(-1px);
 }
 
 .admin-content-type-option.is-selected {
-  border-color: var(--color-accent-border) !important;
-  background: var(--color-accent-soft) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  border-color: rgba(125, 211, 252, 0.88) !important;
+  background:
+    radial-gradient(circle at top right, rgba(56, 189, 248, 0.22), transparent 52%),
+    linear-gradient(180deg, rgba(8, 47, 73, 0.85), rgba(8, 47, 73, 0.56)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 0 0 1px rgba(125, 211, 252, 0.08);
 }
 
 .admin-content-type-icon {
@@ -132,10 +138,10 @@
 }
 
 .admin-content-editor-section {
-  border: 1px solid var(--color-border-subtle);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.02);
   border-radius: 16px;
-  padding: 24px;
+  padding: 20px;
 }
 
 .admin-content-editor-section-head {
@@ -146,8 +152,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: var(--color-text-muted);
-  font-size: 11px;
+  color: rgb(148 163 184);
+  font-size: 12px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -161,7 +167,7 @@
   background: rgba(255, 255, 255, 0.03) !important;
   border-radius: 6px !important;
   padding: 14px 16px !important;
-  color: var(--color-text-secondary) !important;
+  color: rgb(226 232 240) !important;
 }
 
 .admin-content-upload-field:hover {
@@ -194,10 +200,10 @@
 
 .admin-content-preview-poll-option {
   border: 1px solid rgba(148, 163, 184, 0.16);
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.04);
   border-radius: 12px;
   padding: 12px 14px;
-  color: var(--color-text-primary);
+  color: rgb(241 245 249);
   font-size: 14px;
 }
 

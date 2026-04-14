@@ -7,10 +7,12 @@ import Button from '../../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import EmptyState from '../../components/ui/EmptyState';
 import KpiCard from '../../components/ui/KpiCard';
+import LoadingState from '../../components/ui/LoadingState';
 import Pagination from '../../components/ui/Pagination';
+import PreviewPanel from '../../components/ui/PreviewPanel';
 import SearchInput from '../../components/ui/SearchInput';
 import Select from '../../components/ui/Select';
-import Skeleton from '../../components/ui/Skeleton';
+import StatusDot from '../../components/ui/StatusDot';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/Table';
 import { DEFAULT_USERS_PAGE_SIZE, fetchUsersFromApi, fetchUsersMock, mockUsers, USER_ROLE_OPTIONS } from '../../mocks/adminUsers';
 
@@ -72,21 +74,19 @@ function exportUsersCsv(items) {
 }
 
 function SourceBadge({ source, bridgeMode }) {
-  return <Badge variant="outline">{formatSourceLabel(source, bridgeMode)}</Badge>;
+  return <Badge variant="info">{formatSourceLabel(source, bridgeMode)}</Badge>;
 }
 
 function MusicSnapshotCard({ music }) {
   const nowPlaying = music?.nowPlaying || null;
 
   return (
-    <section className="rounded-2xl border border-border bg-card/70 p-4">
+    <PreviewPanel
+      title="Leitura atual"
+      description={nowPlaying ? 'Estado atual salvo para mapa, feed e histórico.' : 'Nenhuma reprodução ativa detectada no momento.'}
+      contentClassName="pt-0"
+    >
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <div className="text-sm font-semibold text-foreground">Leitura atual</div>
-          <div className="mt-1 text-xs text-muted-foreground">
-            {nowPlaying ? 'Estado atual salvo para mapa, feed e historico.' : 'Nenhuma reproducao ativa detectada no momento.'}
-          </div>
-        </div>
         <SourceBadge source={nowPlaying?.source} bridgeMode={nowPlaying?.bridgeMode} />
       </div>
 
@@ -121,14 +121,13 @@ function MusicSnapshotCard({ music }) {
           </div>
         </div>
       ) : null}
-    </section>
+    </PreviewPanel>
   );
 }
 
 function ConnectionSnapshotCard({ music, bridgeDevices }) {
   return (
-    <section className="rounded-2xl border border-border bg-card/70 p-4">
-      <div className="text-sm font-semibold text-foreground">Conexoes e dispositivos</div>
+    <PreviewPanel title="Conexões e dispositivos" contentClassName="pt-0">
       <div className="mt-4 flex flex-col gap-3">
         <div className="rounded-xl border border-border bg-background/40 p-3">
           <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Conta</div>
@@ -159,20 +158,13 @@ function ConnectionSnapshotCard({ music, bridgeDevices }) {
           </div>
         </div>
       </div>
-    </section>
+    </PreviewPanel>
   );
 }
 
 function HistoryPanel({ music, musicHistory }) {
   return (
-    <section className="rounded-2xl border border-border bg-card/70 p-4">
-      <div>
-        <div className="text-sm font-semibold text-foreground">Historico musical</div>
-        <div className="mt-1 text-xs text-muted-foreground">
-          {music.historyCount || 0} reproducoes salvas no banco
-        </div>
-      </div>
-
+    <PreviewPanel title="Histórico musical" description={`${music.historyCount || 0} reproduções salvas no banco`} contentClassName="pt-0">
       <div className="mt-4 space-y-3">
         {musicHistory.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">
@@ -204,7 +196,7 @@ function HistoryPanel({ music, musicHistory }) {
           ))
         )}
       </div>
-    </section>
+    </PreviewPanel>
   );
 }
 
@@ -287,7 +279,7 @@ export default function UsersPage({ apiFetch }) {
               <p className="text-sm text-muted-foreground">Uma linha limpa por usuário e detalhes expandidos quando você quiser investigar o histórico musical.</p>
             </div>
             <div className="flex items-center gap-2">
-              <Badge variant="outline">{source === 'api' ? 'API' : 'Mock'}</Badge>
+              <Badge variant="neutral">{source === 'api' ? 'API' : 'Mock'}</Badge>
               <span className="text-sm text-muted-foreground">{total} registros</span>
             </div>
           </div>
@@ -306,11 +298,7 @@ export default function UsersPage({ apiFetch }) {
           {error ? <Alert>{error}</Alert> : null}
 
           {loading ? (
-            <div className="space-y-2">
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-            </div>
+            <LoadingState title="Carregando usuários" description="Buscando usuários, conexões musicais e histórico da base administrativa." rows={3} />
           ) : items.length === 0 ? (
             <EmptyState
               title="Nenhum usuário encontrado"
@@ -347,10 +335,7 @@ export default function UsersPage({ apiFetch }) {
                               <div className="flex items-center gap-2">
                                 <div className="font-medium text-foreground">{user.name || 'Usuário'}</div>
                                 {isUserPlayingNow(user) ? (
-                                  <span className="relative inline-flex h-2.5 w-2.5 shrink-0">
-                                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400" />
-                                  </span>
+                                  <StatusDot variant="success" pulse />
                                 ) : null}
                               </div>
                               <div className="text-xs text-muted-foreground">{getUserMeta(user)}</div>

@@ -65,16 +65,11 @@ function SidebarContent({ activeItem, collapsed, onToggle, onNavigate, closeMobi
   return (
     <>
       <div className="flex h-16 items-center justify-between border-b border-border px-4">
-        <div className={cn('flex items-center gap-3 overflow-hidden', collapsed && 'justify-center')}>
-          <div className="grid h-9 w-9 place-items-center rounded-xl border border-border bg-secondary/70 text-foreground">
+        <div className={cn('flex items-center gap-2 overflow-hidden', collapsed && 'justify-center')}>
+          <div className="grid h-8 w-8 place-items-center rounded-full bg-secondary text-foreground">
             <Ticket className="h-4 w-4" />
           </div>
-          {!collapsed ? (
-            <div className="min-w-0">
-              <span className="block truncate text-sm font-semibold text-foreground">Muusic Admin</span>
-              <span className="block truncate text-[12px] text-muted-foreground">Console operacional</span>
-            </div>
-          ) : null}
+          {!collapsed ? <span className="text-sm font-semibold text-foreground">Management</span> : null}
         </div>
         <Button
           variant="ghost"
@@ -92,9 +87,9 @@ function SidebarContent({ activeItem, collapsed, onToggle, onNavigate, closeMobi
           <div key={section.label}>
             {!collapsed ? (
               <div className="mb-2 flex items-center justify-between gap-2">
-                <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">{section.label}</p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">{section.label}</p>
                 {section.disabled ? (
-                  <span className="rounded-full border border-border/70 px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground/80">
+                  <span className="rounded-full border border-border/70 px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] text-muted-foreground/80">
                     Inativo
                   </span>
                 ) : null}

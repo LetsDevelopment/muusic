@@ -2,7 +2,7 @@ import { cn } from '../../lib/utils';
 
 export function Table({ className, ...props }) {
   return (
-    <div className="relative w-full overflow-auto rounded-2xl border border-border bg-card/70">
+    <div className="relative w-full overflow-auto rounded-xl border border-border">
       <table className={cn('w-full caption-bottom text-sm', className)} {...props} />
     </div>
   );
@@ -17,13 +17,13 @@ export function TableBody({ className, ...props }) {
 }
 
 export function TableRow({ className, ...props }) {
-  return <tr className={cn('border-b border-border transition-colors duration-150 hover:bg-secondary/30', className)} {...props} />;
+  return <tr className={cn('border-b border-border transition-colors duration-150 hover:bg-secondary/40', className)} {...props} />;
 }
 
 export function TableHead({ className, ...props }) {
-  return <th className={cn('h-12 px-4 text-left align-middle text-[12px] font-semibold uppercase tracking-[0.16em] text-muted-foreground', className)} {...props} />;
+  return <th className={cn('h-12 px-4 text-left align-middle text-xs font-semibold uppercase tracking-wide text-muted-foreground', className)} {...props} />;
 }
 
 export function TableCell({ className, ...props }) {
-  return <td className={cn('p-4 align-middle text-[14px] text-card-foreground', className)} {...props} />;
+  return <td className={cn('p-4 align-middle', className)} {...props} />;
 }

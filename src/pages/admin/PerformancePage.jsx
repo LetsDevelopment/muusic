@@ -3,7 +3,10 @@ import PageHeader from '../../components/admin/PageHeader';
 import Alert from '../../components/ui/Alert';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import KpiCard from '../../components/ui/KpiCard';
+import LoadingState from '../../components/ui/LoadingState';
+import StatusDot from '../../components/ui/StatusDot';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/Table';
+import TableEmptyRow from '../../components/ui/TableEmptyRow';
 import Tooltip from '../../components/ui/Tooltip';
 
 function formatUptime(sec) {
@@ -15,9 +18,9 @@ function formatUptime(sec) {
 }
 
 function statusColorClass(level) {
-  if (level === 'critical') return 'bg-red-500';
-  if (level === 'attention') return 'bg-amber-400';
-  return 'bg-emerald-500';
+  if (level === 'critical') return 'danger';
+  if (level === 'attention') return 'warning';
+  return 'success';
 }
 
 function metricLevel(value, { attention, critical }) {
@@ -30,7 +33,7 @@ function metricLevel(value, { attention, critical }) {
 function MetricRow({ label, description, value, level = 'healthy' }) {
   return (
     <p className="flex items-center gap-2 text-sm">
-      <span className={`h-[3px] w-[3px] rounded-full ${statusColorClass(level)}`} aria-hidden="true" />
+      <StatusDot variant={statusColorClass(level)} className="h-[6px] w-[6px]" />
       <Tooltip content={description}>
         <span className="cursor-help text-muted-foreground">{label}:</span>
       </Tooltip>
@@ -80,7 +83,7 @@ export default function PerformancePage({ apiFetch }) {
 
       {error ? <Alert>{error}</Alert> : null}
 
-      {loading && !snapshot ? <p className="text-sm text-muted-foreground">Carregando métricas...</p> : null}
+      {loading && !snapshot ? <LoadingState title="Carregando métricas" description="Coletando indicadores do servidor, cache, HTTP e socket." rows={4} /> : null}
 
       {snapshot ? (
         <>
@@ -242,13 +245,7 @@ export default function PerformancePage({ apiFetch }) {
                       <TableCell>{route.p95Ms}</TableCell>
                     </TableRow>
                   ))}
-                  {!topRoutes.length ? (
-                    <TableRow>
-                      <TableCell className="text-muted-foreground" colSpan={4}>
-                        Sem tráfego suficiente para exibir rotas.
-                      </TableCell>
-                    </TableRow>
-                  ) : null}
+                  {!topRoutes.length ? <TableEmptyRow colSpan={4} title="Sem tráfego suficiente" description="Ainda não há volume suficiente para exibir rotas nesta janela." /> : null}
                 </TableBody>
               </Table>
             </CardContent>
@@ -280,11 +277,7 @@ export default function PerformancePage({ apiFetch }) {
                     </TableRow>
                   ))}
                   {!topSocketEvents.length ? (
-                    <TableRow>
-                      <TableCell className="text-muted-foreground" colSpan={5}>
-                        Sem eventos de socket suficientes na janela atual.
-                      </TableCell>
-                    </TableRow>
+                    <TableEmptyRow colSpan={5} title="Sem eventos suficientes" description="Ainda não há eventos de socket suficientes para esta janela." />
                   ) : null}
                 </TableBody>
               </Table>
@@ -319,11 +312,7 @@ export default function PerformancePage({ apiFetch }) {
                     </TableRow>
                   ))}
                   {!snapshot.cache?.stats?.length ? (
-                    <TableRow>
-                      <TableCell className="text-muted-foreground" colSpan={6}>
-                        Sem dados de cache suficientes na janela atual.
-                      </TableCell>
-                    </TableRow>
+                    <TableEmptyRow colSpan={6} title="Sem dados de cache" description="Ainda não há dados suficientes de cache para esta janela." />
                   ) : null}
                 </TableBody>
               </Table>

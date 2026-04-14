@@ -1,37 +1,40 @@
 @import './tokens.css';
 
 .admin-root.dark {
-  --background: 224 42% 9%;
-  --background-alt: 220 36% 12%;
-  --foreground: 210 40% 98%;
+  --background: 224 34% 4%;
+  --background-alt: 224 30% 7%;
+  --foreground: 220 20% 95%;
 
-  --card: 222 33% 12%;
-  --card-foreground: 210 40% 98%;
-  --popover: 222 31% 14%;
-  --popover-foreground: 210 40% 98%;
+  --card: 223 25% 8%;
+  --card-foreground: 220 20% 95%;
+  --popover: 223 25% 9%;
+  --popover-foreground: 220 20% 95%;
 
-  --primary: 198 93% 60%;
-  --primary-foreground: 222 47% 11%;
-  --secondary: 220 28% 18%;
-  --secondary-foreground: 210 40% 96%;
-  --muted: 220 24% 20%;
-  --muted-foreground: 215 20% 70%;
-  --accent: 220 28% 18%;
-  --accent-foreground: 210 40% 98%;
+  --primary: 220 20% 98%;
+  --primary-foreground: 224 34% 4%;
+  --secondary: 223 18% 14%;
+  --secondary-foreground: 220 20% 92%;
+  --muted: 224 14% 20%;
+  --muted-foreground: 220 12% 62%;
+  --accent: 223 18% 14%;
+  --accent-foreground: 220 20% 95%;
 
-  --destructive: 0 84% 68%;
+  --destructive: 350 84% 60%;
   --destructive-foreground: 220 20% 98%;
-  --border: 220 24% 100% / 0.1;
-  --input: 220 24% 100% / 0.1;
-  --ring: 198 93% 60%;
+  --border: 220 20% 100% / 0.1;
+  --input: 220 20% 100% / 0.1;
+  --ring: 220 15% 80%;
 
   --radius: 12px;
-  --radius-button: 8px;
+  --radius-button: 3px;
 }
 
 .admin-root {
   font-family: var(--admin-font-family);
-  background: linear-gradient(180deg, #0b1020 0%, #0e1528 100%);
+  background:
+    radial-gradient(900px 420px at 0% -20%, rgba(110, 231, 255, 0.08), transparent 50%),
+    radial-gradient(900px 420px at 100% -20%, rgba(148, 163, 184, 0.1), transparent 55%),
+    hsl(var(--background));
 }
 
 .admin-root * {
@@ -45,68 +48,49 @@
 
 .admin-root .ui-button {
   border-radius: var(--radius-button) !important;
-  box-shadow: none !important;
 }
 
 .admin-root .admin-cta-new {
-  border: 1px solid var(--color-accent-border);
-  background: var(--color-accent);
-  color: #06121a;
+  border: 1px solid rgb(203 213 225);
+  background: #fff;
+  color: #000;
   border-radius: var(--radius-button) !important;
 }
 
 .admin-root .admin-cta-new:hover {
-  background: var(--color-accent-hover);
-  border-color: rgba(125, 211, 252, 0.52);
-  color: #06121a;
+  background: rgb(241 245 249);
+  border-color: rgb(148 163 184);
+  color: #000;
 }
 
 .admin-root .admin-cta-new:focus-visible {
-  box-shadow: 0 0 0 2px rgba(125, 211, 252, 0.35);
+  box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.45);
 }
 
 .admin-root .admin-neutral-control {
-  color: rgb(148 163 184 / 0.88) !important;
+  color: rgb(148 163 184 / 0.78) !important;
   border-color: transparent !important;
   background: transparent !important;
 }
 
 .admin-root .admin-neutral-control:hover {
-  color: rgb(248 250 252) !important;
+  color: rgb(226 232 240) !important;
   background: rgb(148 163 184 / 0.12) !important;
 }
 
-.admin-root .ui-button--default {
-  background: var(--color-accent) !important;
-  color: #06121a !important;
-  border-color: rgba(125, 211, 252, 0.4) !important;
-}
-
-.admin-root .ui-button--default:hover {
-  background: var(--color-accent-hover) !important;
-  border-color: rgba(125, 211, 252, 0.54) !important;
-}
-
+.admin-root .ui-button--default,
 .admin-root .ui-button--secondary,
 .admin-root .ui-button--outline {
-  background: rgba(255, 255, 255, 0.04) !important;
-  color: rgb(241 245 249) !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: #fff !important;
+  color: rgb(15 23 42) !important;
+  border-color: rgb(203 213 225) !important;
 }
 
+.admin-root .ui-button--default:hover,
 .admin-root .ui-button--secondary:hover,
 .admin-root .ui-button--outline:hover {
-  background: rgba(255, 255, 255, 0.07) !important;
-  border-color: rgba(255, 255, 255, 0.16) !important;
-}
-
-.admin-root .ui-button--ghost {
-  color: rgb(226 232 240) !important;
-}
-
-.admin-root .ui-button--ghost:hover {
-  background: rgba(255, 255, 255, 0.06) !important;
-  color: rgb(255 255 255) !important;
+  background: rgb(248 250 252) !important;
+  border-color: rgb(148 163 184) !important;
 }
 
 .admin-root .admin-select-trigger,
@@ -146,20 +130,16 @@
 .admin-root .admin-sidebar-item {
   color: rgb(148 163 184) !important;
   background: transparent !important;
-  border: 1px solid transparent !important;
 }
 
 .admin-root .admin-sidebar-item:hover {
   color: rgb(248 250 252) !important;
-  background: rgba(255, 255, 255, 0.04) !important;
-  border-color: rgba(255, 255, 255, 0.06) !important;
+  background: transparent !important;
 }
 
 .admin-root .admin-sidebar-item.is-active {
   color: rgb(255 255 255) !important;
-  background: rgba(56, 189, 248, 0.12) !important;
-  border-color: rgba(125, 211, 252, 0.26) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+  background: transparent !important;
 }
 
 .admin-root .admin-trendings-tab {

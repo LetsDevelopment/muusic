@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { CalendarDays, ChevronRight, Eye, Heart, Images, Mic2, Pencil, Plus, Upload, Users, Video } from 'lucide-react';
 import PageHeader from '../../components/admin/PageHeader';
+import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import { Card, CardContent, CardHeader } from '../../components/ui/Card';
+import PreviewPanel from '../../components/ui/PreviewPanel';
+import StatusDot from '../../components/ui/StatusDot';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/Table';
 import { mockAdminFeedItems } from '../../mocks/adminContentFeed';
 import '../../styles/admin-content-feed.css';
@@ -50,13 +53,13 @@ const CONTENT_TYPES = [
 
 const STATUS_META = {
   published: {
-    dot: 'bg-emerald-400'
+    dot: 'success'
   },
   scheduled: {
-    dot: 'bg-amber-400'
+    dot: 'warning'
   },
   inactive: {
-    dot: 'bg-slate-500'
+    dot: 'neutral'
   }
 };
 
@@ -89,7 +92,7 @@ function getContentTypeMeta(contentType) {
 
 function EmptyPreview({ type }) {
   return (
-    <div className="grid h-[340px] place-items-center rounded-[12px] border border-dashed border-white/10 bg-black/20 text-sm text-slate-300">
+    <div className="grid h-[340px] place-items-center rounded-[12px] border border-dashed border-white/10 bg-black/30 text-sm text-slate-300">
       {type === 'video' ? 'Vídeo indisponível para preview.' : 'Imagem indisponível para preview.'}
     </div>
   );
@@ -103,7 +106,7 @@ function PreviewModal({ item, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm">
       <button type="button" className="admin-content-feed-overlay absolute inset-0" onClick={onClose} aria-label="Fechar preview" />
-      <div className="relative z-10 w-full max-w-5xl overflow-hidden rounded-2xl border border-white/10 bg-slate-950 shadow-2xl">
+      <div className="relative z-10 w-full max-w-5xl overflow-hidden rounded-[28px] border border-white/10 bg-slate-950 shadow-2xl">
         <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
           <div>
             <p className="text-xs uppercase tracking-[0.22em] text-slate-400">Preview do conteúdo</p>
@@ -112,12 +115,10 @@ function PreviewModal({ item, onClose }) {
               <span className="admin-content-feed-type-pill inline-flex items-center px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.18em]">
                 {item.type === 'video' ? 'Vídeo' : 'Imagem'}
               </span>
-              <span className="admin-content-feed-type-pill inline-flex items-center px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.18em]">
-                {typeMeta.label}
-              </span>
+              <Badge variant="neutral">{typeMeta.label}</Badge>
             </div>
           </div>
-          <Button type="button" variant="outline" onClick={onClose}>
+          <Button type="button" variant="outline" className="border-white/15 text-white hover:bg-white/10" onClick={onClose}>
             Fechar
           </Button>
         </div>
@@ -285,7 +286,7 @@ function ContentEditorPage({ draft, onChange, onBack, onSubmit }) {
       <PageHeader
         title={draft.id ? 'Editar conteúdo' : 'Novo conteúdo'}
         actions={
-          <Button variant="outline" onClick={onBack}>
+          <Button variant="outline" className="border-white/15 text-white hover:bg-white/10" onClick={onBack}>
             Voltar para o feed
           </Button>
         }
@@ -299,7 +300,7 @@ function ContentEditorPage({ draft, onChange, onBack, onSubmit }) {
         <span>{draft.id ? 'Editar conteúdo' : 'Novo conteúdo'}</span>
       </div>
 
-      <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
         <Card className="border-white/10 bg-slate-950 text-white">
           <CardContent className="space-y-8 pt-6">
             <section className="space-y-4">
@@ -308,7 +309,7 @@ function ContentEditorPage({ draft, onChange, onBack, onSubmit }) {
 
             <section className="admin-content-editor-section">
               <div className="admin-content-editor-section-head">
-                <h3 className="text-[18px] font-semibold leading-[26px] text-white">Informações básicas</h3>
+                <h3 className="text-lg font-semibold text-white">Informações básicas</h3>
               </div>
 
               <div className="grid gap-4">
@@ -335,7 +336,7 @@ function ContentEditorPage({ draft, onChange, onBack, onSubmit }) {
             <section className="admin-content-editor-section">
               <div className="admin-content-editor-section-head">
                 <div>
-                  <h3 className="mt-2 text-[18px] font-semibold leading-[26px] text-white">{typeMeta.label}</h3>
+                  <h3 className="mt-2 text-lg font-semibold text-white">{typeMeta.label}</h3>
                 </div>
               </div>
 
@@ -400,14 +401,36 @@ function ContentEditorPage({ draft, onChange, onBack, onSubmit }) {
         </Card>
 
         <aside className="space-y-4 xl:sticky xl:top-6 xl:self-start">
-          <Card className="border-white/10 bg-slate-950 text-white">
-            <CardContent className="space-y-5 pt-6">
-              <div>
-                <p className="text-xs uppercase tracking-[0.22em] text-slate-500">Resumo da publicação</p>
-                <h3 className="mt-2 text-[18px] font-semibold leading-[26px] text-white">{draft.title || 'Novo conteúdo'}</h3>
-                <p className="mt-1 text-sm text-slate-400">{typeMeta.label}</p>
+          <PreviewPanel
+            eyebrow="Resumo da publicação"
+            title={draft.title || 'Novo conteúdo'}
+            description={typeMeta.label}
+            className="border-white/10 bg-slate-950 text-white"
+            contentClassName="space-y-5 pt-0"
+            footer={
+              <div className="space-y-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full border-white/15 text-white hover:bg-white/10"
+                  onClick={() => onSubmit('inactive')}
+                >
+                  Salvar como rascunho
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full border-white/15 text-white hover:bg-white/10"
+                  onClick={() => onSubmit('scheduled')}
+                >
+                  Agendar
+                </Button>
+                <Button type="button" className="w-full bg-sky-500 text-slate-950 hover:bg-sky-400" onClick={() => onSubmit('published')}>
+                  Publicar agora
+                </Button>
               </div>
-
+            }
+          >
               <div className="overflow-hidden rounded-[12px] border border-white/10 bg-white/[0.03]">
                 {isPoll ? (
                   <div className="admin-content-preview-poll">
@@ -450,42 +473,15 @@ function ContentEditorPage({ draft, onChange, onBack, onSubmit }) {
                   <div className="relative aspect-[4/3]">
                     <img src={previewMedia} alt={draft.title || 'Preview'} className="h-full w-full object-cover" />
                     <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent px-4 pb-3 pt-8">
-                      <span className="admin-content-feed-type-pill inline-flex items-center px-2 py-1 text-[10px] font-medium uppercase tracking-[0.16em]">
-                        {previewKind}
-                      </span>
-                      <span className="admin-content-feed-type-pill inline-flex items-center px-2 py-1 text-[10px] font-medium uppercase tracking-[0.16em]">
-                        {typeMeta.label}
-                      </span>
+                      <Badge variant="neutral">{previewKind}</Badge>
+                      <Badge variant="outline">{typeMeta.label}</Badge>
                     </div>
                   </div>
                 ) : (
                   <div className="grid aspect-[4/3] place-items-center text-sm text-slate-400">Preview do conteúdo</div>
                 )}
               </div>
-
-              <div className="space-y-3 border-t border-white/10 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => onSubmit('inactive')}
-                >
-                  Salvar como rascunho
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => onSubmit('scheduled')}
-                >
-                  Agendar
-                </Button>
-                <Button type="button" className="w-full" onClick={() => onSubmit('published')}>
-                  Publicar agora
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          </PreviewPanel>
         </aside>
       </div>
     </div>
@@ -596,7 +592,7 @@ export default function ContentFeedPage() {
         title="Gestão de Conteúdo"
         subtitle="Operação editorial do time de marketing para o que aparece na plataforma."
         actions={
-          <Button className="admin-cta-new" onClick={openNewPage}>
+          <Button className="bg-sky-500 text-slate-950 hover:bg-sky-400" onClick={openNewPage}>
             <Plus className="h-4 w-4" />
             Adicionar novo
           </Button>
@@ -628,7 +624,7 @@ export default function ContentFeedPage() {
                   <TableRow key={item.id} className="border-white/10 hover:bg-white/[0.03]">
                     <TableCell className="w-[118px]">
                       <div className="flex items-center gap-3 text-sm text-slate-200">
-                        <span className={`h-3 w-3 shrink-0 rounded-full ${status.dot}`} />
+                        <StatusDot variant={status.dot} />
                         <StatusSwitch checked={isActive} onClick={() => toggleItem(item)} />
                       </div>
                     </TableCell>
@@ -645,8 +641,8 @@ export default function ContentFeedPage() {
                           <span className="absolute inset-0 flex items-center justify-center bg-slate-950/10 opacity-0 transition group-hover:opacity-100">
                             {item.type === 'video' ? <Video className="h-6 w-6 text-white" /> : <Eye className="h-6 w-6 text-white" />}
                           </span>
-                          <span className="admin-content-feed-type-pill absolute bottom-2 left-2 inline-flex items-center px-2 py-1 text-[10px] font-medium uppercase tracking-[0.16em]">
-                            {item.type === 'video' ? 'Vídeo' : 'Imagem'}
+                          <span className="absolute bottom-2 left-2">
+                            <Badge variant="neutral">{item.type === 'video' ? 'Vídeo' : 'Imagem'}</Badge>
                           </span>
                         </button>
 

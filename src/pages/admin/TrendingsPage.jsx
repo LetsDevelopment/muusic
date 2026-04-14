@@ -4,7 +4,9 @@ import PageHeader from '../../components/admin/PageHeader';
 import Alert from '../../components/ui/Alert';
 import Button from '../../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
+import EmptyState from '../../components/ui/EmptyState';
 import Input from '../../components/ui/Input';
+import LoadingState from '../../components/ui/LoadingState';
 import { trendingsService } from '../../services/trendingsService';
 
 function TrendList({ title, icon: Icon, items = [], totalPlays = 0, emptyText = 'Sem dados de reprodução ainda.' }) {
@@ -19,7 +21,7 @@ function TrendList({ title, icon: Icon, items = [], totalPlays = 0, emptyText = 
       </CardHeader>
       <CardContent className="grid gap-3 pt-0">
         {items.length === 0 ? (
-          <div className="rounded-lg border border-border bg-background/40 px-4 py-6 text-center text-sm text-muted-foreground">{emptyText}</div>
+          <EmptyState title="Sem dados disponíveis" description={emptyText} />
         ) : (
           items.map((item, index) => (
             <div key={`${item.id || item.name}-${index}`} className="rounded-lg border border-border bg-background/40 px-4 py-3">
@@ -126,7 +128,7 @@ export default function TrendingsPage({ apiFetch }) {
         }
       />
       {error ? <Alert>{error}</Alert> : null}
-      {loading ? <p className="text-sm text-muted-foreground">Carregando trendings...</p> : null}
+      {loading ? <LoadingState title="Carregando trendings" description="Consolidando as reproduções recentes para gerar os rankings." rows={3} /> : null}
 
       <section className="space-y-4">
         <div className="admin-trendings-tabs flex flex-wrap gap-2 rounded-lg border border-border bg-card p-2" role="tablist" aria-label="Abas de trendings">

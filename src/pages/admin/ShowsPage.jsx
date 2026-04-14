@@ -8,10 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Ca
 import EmptyState from '../../components/ui/EmptyState';
 import Input from '../../components/ui/Input';
 import KpiCard from '../../components/ui/KpiCard';
+import LoadingState from '../../components/ui/LoadingState';
 import Pagination from '../../components/ui/Pagination';
 import SearchInput from '../../components/ui/SearchInput';
 import Select from '../../components/ui/Select';
-import Skeleton from '../../components/ui/Skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/Table';
 import { buildCityOptions, DEFAULT_SHOWS_PAGE_SIZE, fetchShowsFromApi, fetchShowsMock, getShowStatus, mockShows } from '../../mocks/adminShows';
 
@@ -314,7 +314,7 @@ export default function ShowsPage({ apiFetch }) {
         <KpiCard icon={MapPin} label="Cidades ativas" value={kpis.cities} />
       </section>
 
-      {feedback ? <Alert>{feedback}</Alert> : null}
+      {feedback ? <Alert variant="success">{feedback}</Alert> : null}
       {error ? <Alert>{error}</Alert> : null}
 
       <Card>
@@ -322,7 +322,7 @@ export default function ShowsPage({ apiFetch }) {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <CardTitle className="text-2xl">Shows cadastrados</CardTitle>
             <div className="flex items-center gap-2">
-              <Badge variant="outline">{source === 'api' ? 'API' : 'Mock'}</Badge>
+              <Badge variant="neutral">{source === 'api' ? 'API' : 'Mock'}</Badge>
               <span className="text-sm text-muted-foreground">{total} registros</span>
             </div>
           </div>
@@ -339,11 +339,7 @@ export default function ShowsPage({ apiFetch }) {
           </div>
 
           {loading ? (
-            <div className="space-y-2">
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-            </div>
+            <LoadingState title="Carregando shows" description="Atualizando a listagem de eventos e os filtros disponíveis." rows={3} />
           ) : items.length === 0 ? (
             <EmptyState
               title="Nenhum show encontrado"
@@ -378,7 +374,7 @@ export default function ShowsPage({ apiFetch }) {
                         <TableCell>{show.city}</TableCell>
                         <TableCell>{formatDate(show.startsAt)}</TableCell>
                         <TableCell>
-                          <Badge variant={status === 'proximo' ? 'success' : 'outline'}>{status}</Badge>
+                          <Badge variant={status === 'proximo' ? 'success' : 'neutral'}>{status}</Badge>
                         </TableCell>
                         <TableCell>
                           {show.ticketUrl ? (

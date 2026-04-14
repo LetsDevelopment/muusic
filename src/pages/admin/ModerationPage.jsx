@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Ca
 import EmptyState from '../../components/ui/EmptyState';
 import Input from '../../components/ui/Input';
 import KpiCard from '../../components/ui/KpiCard';
+import PreviewPanel from '../../components/ui/PreviewPanel';
 import Select from '../../components/ui/Select';
 import { mockModerationContent, moderationTypeOptions } from '../../mocks/moderationContent';
 
@@ -55,13 +56,13 @@ export default function ModerationPage() {
         <KpiCard icon={Search} label="Posts no conjunto" value={kpis.posts} />
       </section>
 
-      {feedback ? <Alert>{feedback}</Alert> : null}
+      {feedback ? <Alert variant="success">{feedback}</Alert> : null}
 
       <Card>
         <CardHeader className="space-y-0 pb-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <CardTitle className="text-2xl">Fila de moderação</CardTitle>
-            <Badge variant="outline">Mock</Badge>
+            <Badge variant="neutral">Mock</Badge>
           </div>
         </CardHeader>
 
@@ -84,25 +85,26 @@ export default function ModerationPage() {
           ) : (
             <div className="grid gap-3">
               {filtered.map((item) => (
-                <article key={item.id} className="rounded-lg border border-border bg-background/40 p-4">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <Badge variant={item.reports > 0 ? 'warning' : 'outline'}>{item.type}</Badge>
-                      <span className="text-xs text-muted-foreground">{item.source}</span>
+                <PreviewPanel
+                  key={item.id}
+                  title={item.user}
+                  description={item.text}
+                  eyebrow={formatDate(item.createdAt)}
+                  footer={
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-xs text-muted-foreground">Denúncias: {item.reports}</span>
+                      <Button type="button" variant="outline" className="admin-cta-new" onClick={() => removeContent(item.id)}>
+                        <Trash2 className="h-4 w-4" />
+                        Apagar conteúdo
+                      </Button>
                     </div>
-                    <span className="text-xs text-muted-foreground">{formatDate(item.createdAt)}</span>
+                  }
+                >
+                  <div className="flex items-center gap-2">
+                    <Badge variant={item.reports > 0 ? 'warning' : 'neutral'}>{item.type}</Badge>
+                    <Badge variant="outline">{item.source}</Badge>
                   </div>
-                  <p className="mt-2 text-sm text-foreground">
-                    <strong>{item.user}</strong> {item.text}
-                  </p>
-                  <div className="mt-3 flex items-center justify-between gap-3">
-                    <span className="text-xs text-muted-foreground">Denúncias: {item.reports}</span>
-                    <Button type="button" variant="outline" className="admin-cta-new" onClick={() => removeContent(item.id)}>
-                      <Trash2 className="h-4 w-4" />
-                      Apagar conteúdo
-                    </Button>
-                  </div>
-                </article>
+                </PreviewPanel>
               ))}
             </div>
           )}
