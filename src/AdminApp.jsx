@@ -11,6 +11,7 @@ import TrendingsPage from './pages/admin/TrendingsPage';
 import UsersPage from './pages/admin/UsersPage';
 import MockSectionPage from './pages/admin/MockSectionPage';
 import ContentFeedPage from './pages/admin/ContentFeedPage';
+import SuperfansPage from './pages/admin/SuperfansPage';
 import { useAuthFlow } from './hooks/useAuthFlow';
 import { mockAdminSections } from './mocks/adminGrowthAdsBlog';
 import './styles/global.css';
@@ -23,6 +24,7 @@ const ROUTE_BY_PAGE = {
   moderacao: '/moderacao',
   performance: '/performance',
   feed: '/conteudo/feed',
+  superfas: '/superfas',
   lista_espera: '/growth/lista-espera',
   landing_pages: '/growth/landing-pages',
   campanhas: '/growth/campanhas',
@@ -41,6 +43,7 @@ const PAGE_BY_ROUTE = {
   '/moderacao': 'moderacao',
   '/performance': 'performance',
   '/conteudo/feed': 'feed',
+  '/superfas': 'superfas',
   '/growth/lista-espera': 'lista_espera',
   '/growth/landing-pages': 'landing_pages',
   '/growth/campanhas': 'campanhas',
@@ -170,6 +173,7 @@ export default function AdminApp() {
     moderacao: <ModerationPage />,
     performance: <PerformancePage apiFetch={adminFetch} />,
     feed: <ContentFeedPage />,
+    superfas: <SuperfansPage />,
     lista_espera: <MockSectionPage {...mockAdminSections.lista_espera} />,
     landing_pages: <MockSectionPage {...mockAdminSections.landing_pages} />,
     campanhas: <MockSectionPage {...mockAdminSections.campanhas} />,

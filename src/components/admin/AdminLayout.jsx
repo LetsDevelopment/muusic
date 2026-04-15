@@ -13,6 +13,7 @@ import {
   Sparkles,
   Sun,
   Ticket,
+  Trophy,
   Users
 } from 'lucide-react';
 import Button from '../ui/Button';
@@ -24,6 +25,7 @@ const navSections = [
     label: 'V1',
     items: [
       { key: 'feed', label: 'Feed', icon: Clapperboard },
+      { key: 'superfas', label: 'Superfãs', icon: Trophy },
       { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
       { key: 'usuarios', label: 'Usuários', icon: Users },
       { key: 'moderacao', label: 'Moderação', icon: ShieldCheck }

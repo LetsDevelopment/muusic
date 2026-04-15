@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { EyeOff, ShieldMinus } from 'lucide-react';
+import { EyeOff, Flag, ShieldMinus, ShieldAlert, TriangleAlert } from 'lucide-react';
 import PageHeader from '../../components/admin/PageHeader';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
@@ -68,7 +68,16 @@ export default function ModerationPage() {
     const critical = mockModerationContent.filter((item) => item.priority === 'critical').length;
     const suspicious = mockModerationContent.filter((item) => item.suspiciousTerms.length > 0).length;
 
-    return { total, reported, critical, suspicious };
+    return {
+      total,
+      totalPct: '100%',
+      reported,
+      reportedPct: `${Math.round((reported / total) * 100)}%`,
+      critical,
+      criticalPct: `${Math.round((critical / total) * 100)}%`,
+      suspicious,
+      suspiciousPct: `${Math.round((suspicious / total) * 100)}%`
+    };
   }, []);
 
   return (
@@ -79,10 +88,10 @@ export default function ModerationPage() {
       />
 
       <section className="grid gap-4 xl:grid-cols-4 md:grid-cols-2">
-        <KpiCard label="Mensagens totais" value={kpis.total} size="compact" />
-        <KpiCard label="Denúncias" value={kpis.reported} size="compact" />
-        <KpiCard label="Termos suspeitos" value={kpis.suspicious} size="compact" />
-        <KpiCard label="Críticas" value={kpis.critical} size="compact" />
+        <KpiCard label="Mensagens totais" value={kpis.total} hint={kpis.totalPct} icon={ShieldAlert} size="compact" />
+        <KpiCard label="Denúncias" value={kpis.reported} hint={kpis.reportedPct} icon={Flag} size="compact" />
+        <KpiCard label="Termos suspeitos" value={kpis.suspicious} hint={kpis.suspiciousPct} icon={TriangleAlert} size="compact" />
+        <KpiCard label="Críticas" value={kpis.critical} hint={kpis.criticalPct} icon={ShieldAlert} size="compact" />
       </section>
 
       <Card>
