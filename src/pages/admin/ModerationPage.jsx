@@ -124,14 +124,7 @@ export default function ModerationPage() {
                 return (
                   <article
                     key={item.id}
-                    className={[
-                      'rounded-2xl border p-5 transition-colors',
-                      isCritical
-                        ? 'border-amber-300/30 bg-amber-300/[0.06]'
-                        : isReported
-                          ? 'border-sky-300/25 bg-sky-300/[0.05]'
-                          : 'border-border bg-card/70'
-                    ].join(' ')}
+                    className="rounded-2xl border border-border bg-card/70 p-5 transition-colors"
                   >
                     <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                       <div className="min-w-0 flex-1 space-y-4">

@@ -110,18 +110,67 @@
     transform var(--transition-fast);
 }
 
+.admin-root button {
+  border-radius: var(--radius-button);
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-weight: 500;
+}
+
 .admin-root .ui-button {
   border-radius: var(--radius-button);
   box-shadow: none;
 }
 
 .admin-root .ui-button--default {
+  background: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+  border-color: transparent !important;
   box-shadow: var(--admin-shadow-xs);
+}
+
+.admin-root .ui-button--default:hover {
+  background: hsl(var(--primary) / 0.9) !important;
 }
 
 .admin-root .ui-button--secondary,
 .admin-root .ui-button--outline {
+  border-color: hsl(var(--border)) !important;
+  color: hsl(var(--foreground)) !important;
   backdrop-filter: blur(12px);
+}
+
+.admin-root .ui-button--secondary {
+  background: hsl(var(--secondary)) !important;
+}
+
+.admin-root .ui-button--secondary:hover,
+.admin-root .ui-button--outline:hover {
+  background: hsl(var(--accent)) !important;
+}
+
+.admin-root .ui-button--outline {
+  background: hsl(var(--background) / 0.8) !important;
+}
+
+.admin-root .ui-button--ghost {
+  background: transparent !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+.admin-root .ui-button--ghost:hover {
+  background: hsl(var(--accent)) !important;
+}
+
+.admin-root .ui-button--destructive {
+  background: hsl(24 95% 53%) !important;
+  color: hsl(0 0% 100%) !important;
+  border-color: transparent !important;
+}
+
+.admin-root .ui-button--destructive:hover {
+  background: hsl(24 95% 48%) !important;
 }
 
 .admin-root .admin-cta-new {
@@ -161,9 +210,16 @@
   box-shadow: var(--admin-shadow-sm);
 }
 
+.admin-root .admin-select-item {
+  background: transparent !important;
+  color: hsl(var(--foreground)) !important;
+  border: 0 !important;
+  font-weight: 500 !important;
+}
+
 .admin-root .admin-select-item:hover,
 .admin-root .admin-select-item:focus-visible {
-  background: hsl(var(--accent));
+  background: hsl(var(--accent)) !important;
 }
 
 .admin-root .admin-pagination-link {

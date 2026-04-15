@@ -12,12 +12,12 @@ export default function KpiCard({ label, value, hint = '', align = 'center', siz
         compact ? 'min-h-[124px]' : 'min-h-[152px]'
       )}
     >
-      <CardContent className={cn('flex h-full p-6', compact ? 'items-start justify-start' : 'items-center justify-center')}>
-        <div className={cn(isLeft || compact ? 'text-left' : 'text-center')}>
+      <CardContent className={cn('flex h-full p-6 items-center justify-center')}>
+        <div className={cn(compact ? 'text-center' : isLeft ? 'text-left' : 'text-center')}>
           <span className={cn('block font-semibold tracking-tight text-foreground', compact ? 'text-[32px] leading-[36px]' : 'text-4xl')}>
             {value}
           </span>
-          <p className={cn('text-muted-foreground', compact ? 'mt-3 text-xs uppercase tracking-[0.14em]' : 'mt-4 text-sm')}>{label}</p>
+          <p className={cn('text-muted-foreground', compact ? 'mt-3 text-sm' : 'mt-4 text-sm')}>{label}</p>
           {hint ? <p className={cn('text-muted-foreground/80', compact ? 'mt-2 text-sm' : 'mt-2 text-xs')}>{hint}</p> : null}
         </div>
       </CardContent>
