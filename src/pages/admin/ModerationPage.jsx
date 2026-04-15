@@ -169,7 +169,7 @@ export default function ModerationPage() {
                       </div>
 
                       <div className="flex w-full shrink-0 flex-col gap-3 xl:w-[220px]">
-                        <Button type="button" variant="secondary" className="justify-start">
+                        <Button type="button" className="justify-start">
                           <EyeOff className="h-4 w-4" />
                           Ocultar conteúdo
                         </Button>
