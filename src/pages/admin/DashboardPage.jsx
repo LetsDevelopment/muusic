@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Activity, Clock3, MessageCircleMore, RadioTower, Users2, Wifi } from 'lucide-react';
 import PageHeader from '../../components/admin/PageHeader';
-import Alert from '../../components/ui/Alert';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
@@ -21,7 +20,6 @@ import {
   DASHBOARD_TAB_OPTIONS,
   DASHBOARD_USER_SORT_OPTIONS,
   DASHBOARD_VOLUME_OPTIONS,
-  fetchUsersFromApi,
   fetchUsersMock,
   mockDashboardCities,
   mockDashboardMusic,
@@ -29,11 +27,12 @@ import {
 } from '../../mocks/adminUsers';
 
 function formatNumber(value) {
-  return new Intl.NumberFormat('pt-BR').format(value);
+  return new Intl.NumberFormat('pt-BR').format(Number.isFinite(Number(value)) ? Number(value) : 0);
 }
 
 function formatDuration(minutes) {
-  return `${minutes} min`;
+  const safeMinutes = Number.isFinite(Number(minutes)) ? Number(minutes) : 0;
+  return `${safeMinutes} min`;
 }
 
 function getPeriodMultiplier(period) {
@@ -49,11 +48,9 @@ function applyVolumeFilter(rows, value, key) {
   return rows.filter((row) => row[key] < 5000);
 }
 
-export default function DashboardPage({ apiFetch }) {
+export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [users, setUsers] = useState([]);
-  const [source, setSource] = useState('mock');
   const [activeTab, setActiveTab] = useState('users');
   const [period, setPeriod] = useState('24h');
   const [region, setRegion] = useState('all');
@@ -63,30 +60,10 @@ export default function DashboardPage({ apiFetch }) {
 
   const loadData = useCallback(async () => {
     setLoading(true);
-    setError('');
-
-    try {
-      let payload;
-      if (apiFetch) {
-        try {
-          payload = await fetchUsersFromApi({ apiFetch });
-          setSource('api');
-        } catch {
-          payload = await fetchUsersMock({ users: mockUsers });
-          setSource('mock');
-        }
-      } else {
-        payload = await fetchUsersMock({ users: mockUsers });
-        setSource('mock');
-      }
-
-      setUsers(payload.users);
-    } catch (fetchError) {
-      setError(fetchError.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [apiFetch]);
+    const payload = await fetchUsersMock({ users: mockUsers });
+    setUsers(Array.isArray(payload?.users) ? payload.users : mockUsers);
+    setLoading(false);
+  }, []);
 
   useEffect(() => {
     loadData();
@@ -202,13 +179,11 @@ export default function DashboardPage({ apiFetch }) {
               <CardTitle>Leitura operacional</CardTitle>
               <p className="text-sm text-muted-foreground">Listas leves, filtros rápidos e ordenação por prioridade de análise.</p>
             </div>
-            <Badge variant="neutral">{source === 'api' ? 'Fonte: API' : 'Fonte: Mock'}</Badge>
+            <Badge variant="neutral">Fonte: Mock</Badge>
           </div>
         </CardHeader>
 
         <CardContent className="space-y-4">
-          {error ? <Alert>{error}</Alert> : null}
-
           <div className="flex flex-wrap gap-2">
             {DASHBOARD_TAB_OPTIONS.map((tab) => {
               const active = tab.value === activeTab;

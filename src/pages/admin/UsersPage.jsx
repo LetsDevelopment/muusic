@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Ban, CalendarClock, Mail, MapPin, ShieldAlert, X } from 'lucide-react';
 import PageHeader from '../../components/admin/PageHeader';
-import Alert from '../../components/ui/Alert';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
@@ -16,7 +15,6 @@ import StatusDot from '../../components/ui/StatusDot';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/Table';
 import {
   calculateUsersKpis,
-  fetchUsersFromApi,
   fetchUsersMock,
   INITIAL_USERS_BATCH,
   mockUsers,
@@ -39,10 +37,8 @@ function formatDateTime(value) {
   return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(date);
 }
 
-export default function UsersPage({ apiFetch }) {
+export default function UsersPage() {
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [source, setSource] = useState('mock');
   const [users, setUsers] = useState([]);
   const [visibleCount, setVisibleCount] = useState(INITIAL_USERS_BATCH);
   const [selectedUserId, setSelectedUserId] = useState(null);
@@ -57,29 +53,10 @@ export default function UsersPage({ apiFetch }) {
 
   const loadData = useCallback(async () => {
     setLoading(true);
-    setError('');
-    try {
-      let payload;
-      if (apiFetch) {
-        try {
-          payload = await fetchUsersFromApi({ apiFetch });
-          setSource('api');
-        } catch {
-          payload = await fetchUsersMock({ users: mockUsers });
-          setSource('mock');
-        }
-      } else {
-        payload = await fetchUsersMock({ users: mockUsers });
-        setSource('mock');
-      }
-
-      setUsers(payload.users);
-    } catch (fetchError) {
-      setError(fetchError.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [apiFetch]);
+    const payload = await fetchUsersMock({ users: mockUsers });
+    setUsers(Array.isArray(payload?.users) ? payload.users : mockUsers);
+    setLoading(false);
+  }, []);
 
   useEffect(() => {
     loadData();
@@ -115,13 +92,11 @@ export default function UsersPage({ apiFetch }) {
               <CardTitle>Base de usuários</CardTitle>
               <p className="text-sm text-muted-foreground">Lista compacta com filtros analíticos e acesso rápido ao histórico individual.</p>
             </div>
-            <Badge variant="neutral">{source === 'api' ? 'Fonte: API' : 'Fonte: Mock'}</Badge>
+            <Badge variant="neutral">Fonte: Mock</Badge>
           </div>
         </CardHeader>
 
         <CardContent className="space-y-4">
-          {error ? <Alert>{error}</Alert> : null}
-
           <div className="grid gap-3 xl:grid-cols-6">
             <SearchInput value={filters.name} onChange={(event) => setFilters((prev) => ({ ...prev, name: event.target.value }))} placeholder="Nome do usuário" />
             <Input value={filters.cityState} onChange={(event) => setFilters((prev) => ({ ...prev, cityState: event.target.value }))} placeholder="Cidade/Estado" />
