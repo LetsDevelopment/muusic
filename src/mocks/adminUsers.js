@@ -70,9 +70,9 @@ export const DASHBOARD_VOLUME_OPTIONS = [
 ];
 
 export const DASHBOARD_TAB_OPTIONS = [
-  { value: 'users', label: 'Usuários' },
-  { value: 'music', label: 'Música' },
-  { value: 'cities', label: 'Cidade' }
+  { value: 'users', label: 'Superfãs' },
+  { value: 'music', label: 'Top Músicas' },
+  { value: 'cities', label: 'Top Cidades' }
 ];
 
 export const DASHBOARD_USER_SORT_OPTIONS = [

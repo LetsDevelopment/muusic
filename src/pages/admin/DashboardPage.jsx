@@ -32,7 +32,15 @@ function formatNumber(value) {
 
 function formatDuration(minutes) {
   const safeMinutes = Number.isFinite(Number(minutes)) ? Number(minutes) : 0;
-  return `${safeMinutes} min`;
+  const totalSeconds = Math.round(safeMinutes * 60);
+  const mins = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${mins}m ${String(seconds).padStart(2, '0')}s`;
+}
+
+function formatPercent(value) {
+  const safe = Number.isFinite(Number(value)) ? Number(value) : 0;
+  return `${safe}%`;
 }
 
 function getPeriodMultiplier(period) {
@@ -76,6 +84,7 @@ export default function DashboardPage() {
   }, [activeTab]);
 
   const dashboardKpis = useMemo(() => calculateDashboardKpis(users), [users]);
+  const percentageBase = Math.max(dashboardKpis.totalUsers, 1);
 
   const userRows = useMemo(() => {
     const multiplier = getPeriodMultiplier(period);
@@ -152,9 +161,24 @@ export default function DashboardPage() {
 
   const kpiCards = [
     { label: 'Total de usuários', value: formatNumber(dashboardKpis.totalUsers), icon: Users2 },
-    { label: 'Usuários ativos', value: formatNumber(dashboardKpis.activeUsers), icon: Activity },
-    { label: 'Usuários online', value: formatNumber(dashboardKpis.onlineUsers), icon: Wifi },
-    { label: 'Usuários interagindo', value: formatNumber(dashboardKpis.interactingUsers), icon: RadioTower },
+    {
+      label: 'Usuários ativos',
+      value: formatNumber(dashboardKpis.activeUsers),
+      hint: formatPercent(Math.round((dashboardKpis.activeUsers / percentageBase) * 100)),
+      icon: Activity
+    },
+    {
+      label: 'Usuários online',
+      value: formatNumber(dashboardKpis.onlineUsers),
+      hint: formatPercent(Math.round((dashboardKpis.onlineUsers / percentageBase) * 100)),
+      icon: Wifi
+    },
+    {
+      label: 'Usuários interagindo',
+      value: formatNumber(dashboardKpis.interactingUsers),
+      hint: formatPercent(Math.round((dashboardKpis.interactingUsers / percentageBase) * 100)),
+      icon: RadioTower
+    },
     { label: 'Tempo médio de sessão', value: formatDuration(dashboardKpis.avgSessionMinutes), icon: Clock3 },
     { label: 'Sessões de chat abertas', value: formatNumber(dashboardKpis.openChatSessions), icon: MessageCircleMore }
   ];
@@ -168,7 +192,7 @@ export default function DashboardPage() {
 
       <section className="grid gap-4 xl:grid-cols-6 md:grid-cols-3">
         {kpiCards.map((item) => (
-          <KpiCard key={item.label} label={item.label} value={item.value} size="compact" align="left" />
+          <KpiCard key={item.label} label={item.label} value={item.value} hint={item.hint} size="compact" align="left" />
         ))}
       </section>
 
