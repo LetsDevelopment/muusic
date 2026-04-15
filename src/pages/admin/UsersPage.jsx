@@ -163,7 +163,7 @@ export default function UsersPage() {
                         <TableCell className="text-right">
                           <Button
                             type="button"
-                            variant="outline"
+                            variant="default"
                             size="sm"
                             onClick={(event) => {
                               event.stopPropagation();
@@ -218,7 +218,7 @@ export default function UsersPage() {
                 className="bg-card text-card-foreground"
                 contentClassName="space-y-4"
                 footer={
-                  <Button type="button" variant="outline" className="justify-start">
+                  <Button type="button" className="justify-start">
                     <ShieldAlert className="h-4 w-4" />
                     Banir / bloquear usuário
                   </Button>
