@@ -31,21 +31,24 @@ const YOUTUBE_AUDIO_TRACKS = [
     videoId: 'h_aRZwzjYxs',
     title: 'Faixa teste 01',
     artist: 'Artista a confirmar',
-    url: 'https://www.youtube.com/watch?v=h_aRZwzjYxs'
+    url: 'https://www.youtube.com/watch?v=h_aRZwzjYxs',
+    startSeconds: 0
   },
   {
     id: 'track-2',
     videoId: 'WC5C9uYGtsQ',
     title: 'Faixa teste 02',
     artist: 'Artista a confirmar',
-    url: 'https://www.youtube.com/watch?v=WC5C9uYGtsQ&t=873s'
+    url: 'https://www.youtube.com/watch?v=WC5C9uYGtsQ&t=873s',
+    startSeconds: 873
   },
   {
     id: 'track-3',
     videoId: 'EQVAlcdPFes',
     title: 'Faixa teste 03',
     artist: 'Artista a confirmar',
-    url: 'https://www.youtube.com/watch?v=EQVAlcdPFes'
+    url: 'https://www.youtube.com/watch?v=EQVAlcdPFes',
+    startSeconds: 0
   }
 ];
 
@@ -102,14 +105,16 @@ function YouTubeAudioCard() {
 
         playerRef.current = new YT.Player(playerHostRef.current, {
           videoId: activeTrack.videoId,
-          width: '1',
-          height: '1',
+          width: '240',
+          height: '135',
           playerVars: {
             autoplay: 0,
             controls: 0,
             disablekb: 1,
+            enablejsapi: 1,
             fs: 0,
             modestbranding: 1,
+            playsinline: 1,
             rel: 0
           },
           events: {
@@ -117,6 +122,10 @@ function YouTubeAudioCard() {
               if (!mounted) return;
               setReady(true);
               setDuration(playerRef.current?.getDuration?.() || 0);
+              playerRef.current?.cueVideoById({
+                videoId: activeTrack.videoId,
+                startSeconds: activeTrack.startSeconds || 0
+              });
             },
             onStateChange: (event) => {
               const state = event.data;
@@ -148,7 +157,7 @@ function YouTubeAudioCard() {
       playerRef.current?.destroy?.();
       playerRef.current = null;
     };
-  }, [activeTrack.videoId]);
+  }, []);
 
   useEffect(() => {
     if (!playerRef.current || !ready) return;
@@ -157,11 +166,17 @@ function YouTubeAudioCard() {
     setDuration(0);
 
     if (playing) {
-      playerRef.current.loadVideoById(activeTrack.videoId);
+      playerRef.current.loadVideoById({
+        videoId: activeTrack.videoId,
+        startSeconds: activeTrack.startSeconds || 0
+      });
     } else {
-      playerRef.current.cueVideoById(activeTrack.videoId);
+      playerRef.current.cueVideoById({
+        videoId: activeTrack.videoId,
+        startSeconds: activeTrack.startSeconds || 0
+      });
     }
-  }, [activeTrack.videoId, playing, ready]);
+  }, [activeTrack.videoId, activeTrack.startSeconds, playing, ready]);
 
   const progress = duration > 0 ? Math.min((currentTime / duration) * 100, 100) : 0;
 
@@ -213,7 +228,6 @@ function YouTubeAudioCard() {
             <div className="h-2 overflow-hidden rounded-full bg-secondary">
               <div className="h-full rounded-full bg-primary transition-[width] duration-300" style={{ width: `${progress}%` }} />
             </div>
-            <div ref={playerHostRef} className="pointer-events-none absolute left-[-9999px] top-[-9999px] h-px w-px overflow-hidden opacity-0" aria-hidden="true" />
           </div>
         </div>
 
@@ -223,27 +237,42 @@ function YouTubeAudioCard() {
             <p className="text-sm text-muted-foreground">Clique em uma faixa para trocar a fonte do player sem exibir a imagem do vídeo.</p>
           </div>
 
-          <div className="space-y-2">
-            {YOUTUBE_AUDIO_TRACKS.map((track) => {
+          <div className="overflow-hidden rounded-2xl border border-border bg-background/70">
+            {YOUTUBE_AUDIO_TRACKS.map((track, index) => {
               const active = track.id === activeTrackId;
               return (
                 <button
                   key={track.id}
                   type="button"
                   onClick={() => selectTrack(track.id)}
-                  className={`flex w-full items-start justify-between rounded-xl border px-4 py-3 text-left transition-colors ${
-                    active ? 'border-sky-500/30 bg-sky-500/10' : 'border-border bg-background hover:bg-secondary/40'
+                  className={`flex w-full items-center gap-4 border-b border-border px-4 py-3 text-left transition-colors last:border-b-0 ${
+                    active ? 'bg-sky-500/10' : 'bg-transparent hover:bg-secondary/40'
                   }`}
                 >
-                  <div className="min-w-0">
-                    <div className="font-medium text-foreground">{track.title}</div>
-                    <div className="text-sm text-muted-foreground">{track.artist}</div>
+                  <div className="w-8 shrink-0 text-sm font-semibold text-muted-foreground">{String(index + 1).padStart(2, '0')}</div>
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <div
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border ${
+                        active ? 'border-sky-500/30 bg-sky-500/10 text-sky-600 dark:text-sky-300' : 'border-border bg-secondary/50 text-muted-foreground'
+                      }`}
+                    >
+                      {active && playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="truncate font-medium text-foreground">{track.title}</div>
+                      <div className="truncate text-sm text-muted-foreground">{track.artist}</div>
+                    </div>
                   </div>
-                  <span className="ml-4 truncate text-xs text-muted-foreground">{track.videoId}</span>
+                  <div className="shrink-0 text-right">
+                    <div className="text-xs text-muted-foreground">YouTube</div>
+                    <div className="text-xs text-muted-foreground">{formatPlayerTime(track.startSeconds || 0)}</div>
+                  </div>
                 </button>
               );
             })}
           </div>
+
+          <div ref={playerHostRef} className="fixed -left-[9999px] top-0 h-[135px] w-[240px] overflow-hidden" aria-hidden="true" />
         </div>
       </CardContent>
     </Card>
