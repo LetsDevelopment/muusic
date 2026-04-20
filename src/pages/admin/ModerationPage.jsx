@@ -4,11 +4,9 @@ import PageHeader from '../../components/admin/PageHeader';
 import Button from '../../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import EmptyState from '../../components/ui/EmptyState';
-import Input from '../../components/ui/Input';
 import KpiCard from '../../components/ui/KpiCard';
 import SearchInput from '../../components/ui/SearchInput';
-import Select from '../../components/ui/Select';
-import { mockModerationContent, moderationPriorityOptions, moderationTypeOptions } from '../../mocks/moderationContent';
+import { mockModerationContent, moderationPriorityOptions } from '../../mocks/moderationContent';
 
 function formatDate(value) {
   const date = new Date(value);
@@ -37,9 +35,14 @@ function highlightTerms(text, terms) {
   });
 }
 
+function getContentTypeLabel(type) {
+  if (type === 'post') return 'post posts publicação publicacao';
+  if (type === 'comment') return 'comentário comentario comentários comentarios';
+  return '';
+}
+
 export default function ModerationPage() {
   const [query, setQuery] = useState('');
-  const [typeFilter, setTypeFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
 
   const moderationItems = useMemo(() => {
@@ -47,11 +50,12 @@ export default function ModerationPage() {
 
     return mockModerationContent
       .filter((item) => {
-        if (typeFilter !== 'all' && item.type !== typeFilter) return false;
         if (priorityFilter !== 'all' && item.priority !== priorityFilter) return false;
         if (!term) return true;
 
-        return `${item.userName} ${item.user} ${item.source} ${item.text} ${item.suspiciousTerms.join(' ')}`.toLowerCase().includes(term);
+        return `${item.userName} ${item.user} ${item.source} ${item.text} ${item.suspiciousTerms.join(' ')} ${item.contentLabel} ${getContentTypeLabel(item.type)}`
+          .toLowerCase()
+          .includes(term);
       })
       .sort((a, b) => {
         const priorityWeight = { critical: 3, warning: 2, normal: 1 };
@@ -59,7 +63,7 @@ export default function ModerationPage() {
         if (severityDiff !== 0) return severityDiff;
         return b.reports - a.reports;
       });
-  }, [priorityFilter, query, typeFilter]);
+  }, [priorityFilter, query]);
 
   const kpis = useMemo(() => {
     const total = mockModerationContent.length;
@@ -102,9 +106,8 @@ export default function ModerationPage() {
         </CardHeader>
 
         <CardContent className="space-y-4">
-          <div className="grid gap-3 xl:grid-cols-[minmax(0,1.4fr)_220px]">
-            <SearchInput value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar usuário, origem, texto ou termo suspeito" />
-            <Select ariaLabel="Filtrar por tipo" value={typeFilter} onValueChange={setTypeFilter} options={moderationTypeOptions} />
+          <div>
+            <SearchInput value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por usuário, post, comentário, origem, texto ou termo suspeito" />
           </div>
 
           <div className="flex flex-wrap gap-2">
@@ -131,7 +134,6 @@ export default function ModerationPage() {
               actionLabel="Limpar filtros"
               onAction={() => {
                 setQuery('');
-                setTypeFilter('all');
                 setPriorityFilter('all');
               }}
             />
