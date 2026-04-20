@@ -68,7 +68,6 @@ export default function ModerationPage() {
   const kpis = useMemo(() => {
     const total = mockModerationContent.length;
     const reported = mockModerationContent.filter((item) => item.reports > 0).length;
-    const critical = mockModerationContent.filter((item) => item.priority === 'critical').length;
     const suspicious = mockModerationContent.filter((item) => item.suspiciousTerms.length > 0).length;
 
     return {
@@ -76,8 +75,6 @@ export default function ModerationPage() {
       totalPct: '100%',
       reported,
       reportedPct: `${Math.round((reported / total) * 100)}%`,
-      critical,
-      criticalPct: `${Math.round((critical / total) * 100)}%`,
       suspicious,
       suspiciousPct: `${Math.round((suspicious / total) * 100)}%`
     };
@@ -90,11 +87,10 @@ export default function ModerationPage() {
         subtitle="Fila otimizada para leitura rápida, priorização de conteúdo crítico e ação em poucos cliques."
       />
 
-      <section className="grid gap-4 xl:grid-cols-4 md:grid-cols-2">
+      <section className="grid gap-4 lg:grid-cols-3 md:grid-cols-2">
         <KpiCard label="Mensagens totais" value={kpis.total} hint={kpis.totalPct} icon={ShieldAlert} size="compact" />
         <KpiCard label="Denúncias" value={kpis.reported} hint={kpis.reportedPct} icon={Flag} size="compact" />
         <KpiCard label="Termos suspeitos" value={kpis.suspicious} hint={kpis.suspiciousPct} icon={TriangleAlert} size="compact" />
-        <KpiCard label="Críticas" value={kpis.critical} hint={kpis.criticalPct} icon={ShieldAlert} size="compact" />
       </section>
 
       <Card>
